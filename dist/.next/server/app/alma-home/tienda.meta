@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/alma-home/layout,_N_T_/alma-home/tienda/layout,_N_T_/alma-home/tienda/page,_N_T_/alma-home/tienda"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/alma-home/tienda/__PAGE__",
+    "/alma-home/tienda",
+    "/alma-home",
+    "/_index",
+    "/_head"
+  ]
+}

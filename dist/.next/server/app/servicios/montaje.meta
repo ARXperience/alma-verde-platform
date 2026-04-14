@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/servicios/layout,_N_T_/servicios/montaje/layout,_N_T_/servicios/montaje/page,_N_T_/servicios/montaje"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/servicios/montaje/__PAGE__",
+    "/servicios/montaje",
+    "/servicios",
+    "/_index",
+    "/_head"
+  ]
+}

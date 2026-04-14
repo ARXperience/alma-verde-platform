@@ -1,0 +1,5 @@
+:HL["/_next/static/css/2ef6ca6c1d6f9b20.css","style"]
+:HL["/_next/static/css/d53c0a4fa2d7ea44.css","style"]
+:HL["https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap","style"]
+:HL["https://lh3.googleusercontent.com/aida-public/AB6AXuDexqW4XNUcio52ePIXyH24xiYDmrsLPyv7vA7D_Kc5ngOy8cAw-hAEeJY_p5Qq_HwlRLzIC27ouQh5Rw7jUXGkxrKVggUm1qo7Z63zfEWVhYt_OmkE_-xDD2eZLE97sqi0Na84Z5ikgaeP0YjZCJHbDLdhIjLM7Wd_-rSw6jiCZcZvrSgUvmuk8MVdke-FlDfFYw2Ctnqb0wHG0g5ndSbqlsPLGxDtI-iV0nwlQ197_CTuIhPvyzNy8Dye8AWfhyXhyWC8By6cEsc","image"]
+0:{"buildId":"IWaCS98VxzXSVUwrNHp3A","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"servicios","paramType":null,"paramKey":"servicios","hasRuntimePrefetch":false,"slots":{"children":{"name":"stands-ecologicos","paramType":null,"paramKey":"stands-ecologicos","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}

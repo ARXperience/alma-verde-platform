@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/servicios/layout,_N_T_/servicios/mobiliario/layout,_N_T_/servicios/mobiliario/page,_N_T_/servicios/mobiliario"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/servicios/mobiliario/__PAGE__",
+    "/servicios/mobiliario",
+    "/servicios",
+    "/_index",
+    "/_head"
+  ]
+}

@@ -1,0 +1,401 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/admin/orders/[id]",
+      "regex": "^/admin/orders/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/orders/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/admin/portfolio/[id]",
+      "regex": "^/admin/portfolio/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/portfolio/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/admin/products/[id]",
+      "regex": "^/admin/products/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/products/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/admin/projects/[id]",
+      "regex": "^/admin/projects/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/admin/projects/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/portfolio/by-project/[projectId]",
+      "regex": "^/api/portfolio/by\\-project/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPprojectId": "nxtPprojectId"
+      },
+      "namedRegex": "^/api/portfolio/by\\-project/(?<nxtPprojectId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/portfolio/[id]",
+      "regex": "^/api/portfolio/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/portfolio/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/portafolio/[id]",
+      "regex": "^/portafolio/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/portafolio/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/products/[slug]",
+      "regex": "^/products/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/products/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/projects/[id]",
+      "regex": "^/projects/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/projects/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/tienda/[id]",
+      "regex": "^/tienda/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/tienda/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    },
+    {
+      "page": "/admin/orders",
+      "regex": "^/admin/orders(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/orders(?:/)?$"
+    },
+    {
+      "page": "/admin/portfolio",
+      "regex": "^/admin/portfolio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/portfolio(?:/)?$"
+    },
+    {
+      "page": "/admin/portfolio/new",
+      "regex": "^/admin/portfolio/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/portfolio/new(?:/)?$"
+    },
+    {
+      "page": "/admin/products",
+      "regex": "^/admin/products(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/products(?:/)?$"
+    },
+    {
+      "page": "/admin/products/new",
+      "regex": "^/admin/products/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/products/new(?:/)?$"
+    },
+    {
+      "page": "/admin/projects",
+      "regex": "^/admin/projects(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/projects(?:/)?$"
+    },
+    {
+      "page": "/alma-home/tienda",
+      "regex": "^/alma\\-home/tienda(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/alma\\-home/tienda(?:/)?$"
+    },
+    {
+      "page": "/alma-verde/catalogo",
+      "regex": "^/alma\\-verde/catalogo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/alma\\-verde/catalogo(?:/)?$"
+    },
+    {
+      "page": "/api/chat",
+      "regex": "^/api/chat(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/chat(?:/)?$"
+    },
+    {
+      "page": "/api/checkout",
+      "regex": "^/api/checkout(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/checkout(?:/)?$"
+    },
+    {
+      "page": "/api/portfolio",
+      "regex": "^/api/portfolio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/portfolio(?:/)?$"
+    },
+    {
+      "page": "/api/portfolio/admin",
+      "regex": "^/api/portfolio/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/portfolio/admin(?:/)?$"
+    },
+    {
+      "page": "/api/projects/files",
+      "regex": "^/api/projects/files(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/projects/files(?:/)?$"
+    },
+    {
+      "page": "/api/quotation/calculate",
+      "regex": "^/api/quotation/calculate(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/quotation/calculate(?:/)?$"
+    },
+    {
+      "page": "/api/quotation/chat",
+      "regex": "^/api/quotation/chat(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/quotation/chat(?:/)?$"
+    },
+    {
+      "page": "/api/quotation/create-project",
+      "regex": "^/api/quotation/create\\-project(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/quotation/create\\-project(?:/)?$"
+    },
+    {
+      "page": "/api/quotation/extract",
+      "regex": "^/api/quotation/extract(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/quotation/extract(?:/)?$"
+    },
+    {
+      "page": "/api/quotation/generate-image",
+      "regex": "^/api/quotation/generate\\-image(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/quotation/generate\\-image(?:/)?$"
+    },
+    {
+      "page": "/api/quotation/generate-image-multi",
+      "regex": "^/api/quotation/generate\\-image\\-multi(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/quotation/generate\\-image\\-multi(?:/)?$"
+    },
+    {
+      "page": "/api/quotation/generate-render",
+      "regex": "^/api/quotation/generate\\-render(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/quotation/generate\\-render(?:/)?$"
+    },
+    {
+      "page": "/api/quotation/refine-text",
+      "regex": "^/api/quotation/refine\\-text(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/quotation/refine\\-text(?:/)?$"
+    },
+    {
+      "page": "/api/quotation/transcribe",
+      "regex": "^/api/quotation/transcribe(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/quotation/transcribe(?:/)?$"
+    },
+    {
+      "page": "/api/upload",
+      "regex": "^/api/upload(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/upload(?:/)?$"
+    },
+    {
+      "page": "/auth/callback",
+      "regex": "^/auth/callback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/callback(?:/)?$"
+    },
+    {
+      "page": "/auth/forgot-password",
+      "regex": "^/auth/forgot\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/forgot\\-password(?:/)?$"
+    },
+    {
+      "page": "/auth/login",
+      "regex": "^/auth/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/login(?:/)?$"
+    },
+    {
+      "page": "/auth/register",
+      "regex": "^/auth/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/register(?:/)?$"
+    },
+    {
+      "page": "/auth/reset-password",
+      "regex": "^/auth/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/auth/reset\\-password(?:/)?$"
+    },
+    {
+      "page": "/checkout",
+      "regex": "^/checkout(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/checkout(?:/)?$"
+    },
+    {
+      "page": "/contacto",
+      "regex": "^/contacto(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contacto(?:/)?$"
+    },
+    {
+      "page": "/cotizar",
+      "regex": "^/cotizar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/cotizar(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/favicon.ico",
+      "regex": "^/favicon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/nosotros",
+      "regex": "^/nosotros(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/nosotros(?:/)?$"
+    },
+    {
+      "page": "/portafolio",
+      "regex": "^/portafolio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/portafolio(?:/)?$"
+    },
+    {
+      "page": "/servicios",
+      "regex": "^/servicios(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/servicios(?:/)?$"
+    },
+    {
+      "page": "/servicios/activaciones",
+      "regex": "^/servicios/activaciones(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/servicios/activaciones(?:/)?$"
+    },
+    {
+      "page": "/servicios/mobiliario",
+      "regex": "^/servicios/mobiliario(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/servicios/mobiliario(?:/)?$"
+    },
+    {
+      "page": "/servicios/montaje",
+      "regex": "^/servicios/montaje(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/servicios/montaje(?:/)?$"
+    },
+    {
+      "page": "/servicios/produccion-grafica",
+      "regex": "^/servicios/produccion\\-grafica(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/servicios/produccion\\-grafica(?:/)?$"
+    },
+    {
+      "page": "/servicios/stands-ecologicos",
+      "regex": "^/servicios/stands\\-ecologicos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/servicios/stands\\-ecologicos(?:/)?$"
+    },
+    {
+      "page": "/tienda",
+      "regex": "^/tienda(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/tienda(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

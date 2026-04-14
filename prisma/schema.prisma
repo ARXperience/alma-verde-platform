@@ -1,0 +1,358 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USERS & AUTHENTICATION
+// ============================================
+
+enum UserRole {
+  ADMIN
+  COMMERCIAL
+  DESIGNER
+  PRODUCTION
+  MARKETING
+  FINANCE
+  PROJECT_MANAGER
+  CLIENT
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String
+  phone         String?
+  avatar        String?
+  role          UserRole  @default(CLIENT)
+  company       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  projects      Project[]
+  quotations    Quotation[]
+  messages      Message[]
+  orders        Order[]
+  
+  @@map("users")
+}
+
+// ============================================
+// PROJECTS
+// ============================================
+
+enum ProjectStatus {
+  DRAFT
+  QUOTATION
+  APPROVED
+  IN_DESIGN
+  IN_PRODUCTION
+  IN_INSTALLATION
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectType {
+  STAND
+  EVENT
+  BRANDING
+  DECORATION
+  RENTAL
+  CUSTOM
+}
+
+model Project {
+  id              String          @id @default(uuid())
+  title           String
+  description     String
+  type            ProjectType
+  status          ProjectStatus   @default(DRAFT)
+  budget          Float?
+  area            Float?          // m²
+  location        String?
+  startDate       DateTime?
+  endDate         DateTime?
+  aiGenerated     Boolean         @default(false)
+  aiPrompt        String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  // Relations
+  userId          String
+  user            User            @relation(fields: [userId], references: [id])
+  quotations      Quotation[]
+  files           ProjectFile[]
+  renders         ProjectRender[]
+  messages        Message[]
+  tasks           ProjectTask[]
+  
+  @@map("projects")
+}
+
+model ProjectRender {
+  id          String    @id @default(uuid())
+  iteration   Int       @default(1)
+  description String?
+  image_url   String
+  status      String    @default("pending") // pending, completed, failed
+  createdAt   DateTime  @default(now())
+  
+  project_id  String
+  project     Project   @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@map("project_renders")
+}
+
+model ProjectFile {
+  id          String    @id @default(uuid())
+  name        String
+  url         String
+  type        String    // image, document, video, etc.
+  size        Int
+  createdAt   DateTime  @default(now())
+  
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@map("project_files")
+}
+
+model ProjectTask {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  status      String    @default("pending") // pending, in_progress, completed
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@map("project_tasks")
+}
+
+// ============================================
+// QUOTATIONS
+// ============================================
+
+enum QuotationStatus {
+  DRAFT
+  SENT
+  VIEWED
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+model Quotation {
+  id              String            @id @default(uuid())
+  number          String            @unique
+  title           String
+  description     String
+  subtotal        Float
+  tax             Float
+  discount        Float             @default(0)
+  total           Float
+  status          QuotationStatus   @default(DRAFT)
+  validUntil      DateTime
+  aiGenerated     Boolean           @default(false)
+  aiConfidence    Float?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  projectId       String?
+  project         Project?          @relation(fields: [projectId], references: [id])
+  items           QuotationItem[]
+  
+  @@map("quotations")
+}
+
+model QuotationItem {
+  id            String      @id @default(uuid())
+  name          String
+  description   String?
+  quantity      Float
+  unitPrice     Float
+  total         Float
+  
+  quotationId   String
+  quotation     Quotation   @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  
+  @@map("quotation_items")
+}
+
+// ============================================
+// ECOMMERCE
+// ============================================
+
+enum ProductCategory {
+  STAND
+  FURNITURE
+  SCREEN
+  DECORATION
+  ACCESSORY
+  SERVICE
+  RENTAL
+}
+
+enum BusinessUnit {
+  ALMA_VERDE
+  ALMA_HOME
+}
+
+model Product {
+  id              String            @id @default(uuid())
+  name            String
+  slug            String            @unique
+  description     String
+  shortDesc       String?
+  price           Float
+  comparePrice    Float?
+  category        ProductCategory
+  businessUnit    BusinessUnit
+  inStock         Boolean           @default(true)
+  stockQuantity   Int?
+  isRental        Boolean           @default(false)
+  rentalPrice     Float?            // per day
+  images          String[]
+  features        String[]
+  aiGenerated     Boolean           @default(false)
+  showPrice       Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  orderItems      OrderItem[]
+  
+  @@map("products")
+}
+
+// ============================================
+// ORDERS
+// ============================================
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model Order {
+  id              String        @id @default(uuid())
+  orderNumber     String        @unique
+  subtotal        Float
+  tax             Float
+  shipping        Float         @default(0)
+  discount        Float         @default(0)
+  total           Float
+  status          OrderStatus   @default(PENDING)
+  paymentMethod   String?
+  paymentId       String?
+  shippingAddress String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  projectId       String?
+  project         Project?      @relation(fields: [projectId], references: [id])
+  quotationId     String?
+  quotation       Quotation?    @relation(fields: [quotationId], references: [id])
+  items           OrderItem[]
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String    @id @default(uuid())
+  name        String
+  quantity    Int
+  unitPrice   Float
+  total       Float
+  isRental    Boolean   @default(false)
+  rentalDays  Int?
+  
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product?  @relation(fields: [productId], references: [id])
+  
+  @@map("order_items")
+}
+
+// ============================================
+// MESSAGES & COMMUNICATION
+// ============================================
+
+model Message {
+  id          String    @id @default(uuid())
+  content     String
+  isAI        Boolean   @default(false)
+  isInternal  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@map("messages")
+}
+
+// ============================================
+// PORTFOLIO
+// ============================================
+
+model PortfolioItem {
+  id            String    @id @default(uuid())
+  title         String
+  description   String
+  category      String
+  client        String?
+  location      String?
+  year          Int
+  images        String[]
+  featured      Boolean   @default(false)
+  published     Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("portfolio_items")
+}
+
+// ============================================
+// BLOG
+// ============================================
+
+model BlogPost {
+  id            String    @id @default(uuid())
+  title         String
+  slug          String    @unique
+  excerpt       String
+  content       String
+  coverImage    String?
+  published     Boolean   @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("blog_posts")
+}
