@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, ArrowLeft, Package, User, MapPin } from 'lucide-react'
+import { Loader2, ArrowLeft, Package, User, MapPin, Mail, Phone } from 'lucide-react'
 import {
     Select,
     SelectContent,

@@ -81,7 +81,7 @@ export default function CheckoutPage() {
                     tax: 0, // Simplified for now
                     total: cartTotal,
                     status: 'PENDING',
-                    customer_name: formData.name,
+                    customer_name: formData.fullName,
                     customer_email: formData.email,
                     customer_phone: formData.phone,
                     shipping_address: `${formData.address}, ${formData.city}`,
