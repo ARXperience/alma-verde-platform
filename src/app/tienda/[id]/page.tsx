@@ -275,7 +275,8 @@ export default function TiendaProductPage() {
                                                 price: product.rental_price || 0, // Use rental price
                                                 quantity: 1,
                                                 image: product.images?.[0] || '',
-                                                businessUnit: product.business_unit
+                                                businessUnit: product.business_unit,
+                                                slug: product.slug || ''
                                             });
                                             setIsOpen(true);
                                         }}
@@ -305,7 +306,8 @@ export default function TiendaProductPage() {
                                                 price: product.price,
                                                 quantity: 1,
                                                 image: product.images?.[0] || '',
-                                                businessUnit: product.business_unit
+                                                businessUnit: product.business_unit,
+                                                slug: product.slug || ''
                                             });
                                             setIsOpen(true);
                                         }}
