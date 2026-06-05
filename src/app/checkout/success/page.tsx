@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button'
 import { CheckCircle, Loader2 } from 'lucide-react'
 
-export default function CheckoutSuccessPage() {
+import { Suspense } from 'react'
+
+function CheckoutSuccessContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const orderId = searchParams.get('order_id')
@@ -99,5 +101,17 @@ export default function CheckoutSuccessPage() {
                 </CardFooter>
             </Card>
         </div>
+    )
+}
+
+export default function CheckoutSuccessPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <Loader2 className="w-12 h-12 animate-spin text-[#13ec5b]" />
+            </div>
+        }>
+            <CheckoutSuccessContent />
+        </Suspense>
     )
 }
