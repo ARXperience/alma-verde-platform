@@ -302,6 +302,8 @@ export default function TiendaProductPage() {
                         </div>
                     </div>
                 </div>
+            </div>
+
             <Footer />
 
             {/* Image Viewer Modal */}
