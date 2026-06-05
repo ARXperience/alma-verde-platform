@@ -54,44 +54,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             console.log('🔍 Fetching profile for userId:', userId)
 
-            const { data, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', userId)
-                .single()
-
-            if (error) {
-                // Ignore AbortError and known benign errors
-                if (error.code === 'PGRST116') { // Not found - acceptable for new users
-                    console.warn('User profile not found yet.')
+            // Fetch via server API route (uses service role key, bypasses RLS)
+            const res = await fetch(`/api/auth/profile?userId=${userId}`)
+            if (res.ok) {
+                const profile = await res.json()
+                if (profile && profile.id) {
+                    console.log('✅ User profile loaded:', profile)
+                    setUser(profile as unknown as User)
                     return
                 }
-                throw error
             }
 
-            if (!data) return
-
-            console.log('User profile loaded:', data)
-            setUser(data as unknown as User)
+            console.warn('User profile not found for userId:', userId)
         } catch (error: any) {
-            // Ignore AbortError often caused by navigation
             if (error?.message?.includes('AbortError') || error?.name === 'AbortError') {
                 return
             }
-
             console.error('❌ Error fetching profile:', error)
-            // If the error is an object, try to stringify it for more details
-            if (typeof error === 'object' && error !== null) {
-                try {
-                    console.error('Error details JSON:', JSON.stringify(error, null, 2))
-                } catch (e) {
-                    console.error('Could not stringify error object')
-                }
-            }
         } finally {
             setLoading(false)
         }
     }
+
+
 
     async function signIn(email: string, password: string) {
         const { error } = await supabase.auth.signInWithPassword({
