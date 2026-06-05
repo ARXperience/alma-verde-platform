@@ -32,6 +32,7 @@ export default function TiendaProductPage() {
     const [product, setProduct] = useState<Product | null>(null)
     const [loading, setLoading] = useState(true)
     const [activeImage, setActiveImage] = useState(0)
+    const [isViewerOpen, setIsViewerOpen] = useState(false)
 
     useEffect(() => {
         fetchProduct()
@@ -120,13 +121,18 @@ export default function TiendaProductPage() {
                         <div className="relative aspect-square rounded-3xl overflow-hidden bg-white dark:bg-[#152e1e] border border-gray-100 dark:border-[#1e402a] shadow-xl">
                             {product.images && product.images.length > 0 ? (
                                 <>
-                                    <Image
-                                        src={product.images[activeImage]}
-                                        alt={product.name}
-                                        fill
-                                        className="object-cover"
-                                        priority
-                                    />
+                                    <div 
+                                        className="absolute inset-0 cursor-zoom-in"
+                                        onClick={() => setIsViewerOpen(true)}
+                                    >
+                                        <Image
+                                            src={product.images[activeImage]}
+                                            alt={product.name}
+                                            fill
+                                            className="object-cover hover:scale-105 transition-transform duration-500"
+                                            priority
+                                        />
+                                    </div>
                                     {product.images.length > 1 && (
                                         <>
                                             <button 
@@ -296,9 +302,64 @@ export default function TiendaProductPage() {
                         </div>
                     </div>
                 </div>
-            </div>
-
             <Footer />
+
+            {/* Image Viewer Modal */}
+            {isViewerOpen && product && product.images && product.images.length > 0 && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm">
+                    <button 
+                        onClick={() => setIsViewerOpen(false)}
+                        className="absolute top-6 right-6 text-white/70 hover:text-white bg-black/50 hover:bg-[#13ec5b]/20 p-3 rounded-full transition-all z-50"
+                    >
+                        <X className="h-8 w-8" />
+                    </button>
+                    
+                    <div className="relative w-full h-full max-w-7xl max-h-[85vh] flex items-center justify-center p-4 md:p-12" onClick={() => setIsViewerOpen(false)}>
+                        <Image
+                            src={product.images[activeImage]}
+                            alt={product.name}
+                            fill
+                            className="object-contain cursor-zoom-out"
+                            quality={100}
+                            priority
+                        />
+                    </div>
+
+                    {product.images.length > 1 && (
+                        <>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                                className="absolute left-6 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-[#13ec5b] text-white shadow-xl backdrop-blur-md p-4 rounded-full transition-all border border-white/10"
+                            >
+                                <ChevronLeft className="h-8 w-8" />
+                            </button>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                                className="absolute right-6 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-[#13ec5b] text-white shadow-xl backdrop-blur-md p-4 rounded-full transition-all border border-white/10"
+                            >
+                                <ChevronRight className="h-8 w-8" />
+                            </button>
+                            
+                            {/* Thumbnails en el modal */}
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 px-6 py-4 bg-black/50 backdrop-blur-md rounded-2xl border border-white/10 max-w-full overflow-x-auto">
+                                {product.images.map((url, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={(e) => { e.stopPropagation(); setActiveImage(idx); }}
+                                        className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                                            activeImage === idx 
+                                            ? 'border-[#13ec5b] scale-110 shadow-lg shadow-[#13ec5b]/20' 
+                                            : 'border-transparent opacity-50 hover:opacity-100'
+                                        }`}
+                                    >
+                                        <Image src={url} alt={`Thumb ${idx}`} fill className="object-cover" />
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
         </main>
     )
 }
