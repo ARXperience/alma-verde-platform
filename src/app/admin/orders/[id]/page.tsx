@@ -41,11 +41,9 @@ interface Order {
     shipping_address: string
     payment_method?: string
     notes: string
-    user: {
-        email: string
-        full_name: string
-        phone: string
-    }
+    customer_name: string
+    customer_email: string
+    customer_phone: string
     items: OrderItem[]
 }
 
@@ -77,10 +75,7 @@ export default function OrderDetailsPage() {
             // Fetch order with user
             const { data: orderData, error: orderError } = await supabase
                 .from('orders')
-                .select(`
-                    *,
-                    user:users(email, full_name, phone)
-                `)
+                .select(`*`)
                 .eq('id', orderId)
                 .single()
 
@@ -250,18 +245,24 @@ export default function OrderDetailsPage() {
                                 Cliente
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3">
-                            <div>
-                                <p className="text-sm font-medium text-gray-500">Nombre</p>
-                                <p>{order.user?.full_name}</p>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <User className="w-5 h-5 text-gray-500" />
+                                </div>
+                                <div>
+                                    <p className="font-medium">{order.customer_name || 'N/A'}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-500">Email</p>
-                                <p>{order.user?.email}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-500">Teléfono</p>
-                                <p>{order.user?.phone || 'No registrado'}</p>
+                            <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <Mail className="w-4 h-4" />
+                                    {order.customer_email || 'N/A'}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <Phone className="w-4 h-4" />
+                                    {order.customer_phone || 'No especificado'}
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

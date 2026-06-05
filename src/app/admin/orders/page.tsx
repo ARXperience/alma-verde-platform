@@ -31,10 +31,8 @@ interface Order {
     status: string
     payment_method?: string
     created_at: string
-    user: {
-        email: string
-        full_name: string
-    }
+    customer_name: string
+    customer_email: string
 }
 
 const STATUS_MAP: Record<string, string> = {
@@ -85,7 +83,8 @@ export default function OrdersPage() {
 
     const filteredOrders = orders.filter(order => {
         const matchesSearch = order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.user?.email.toLowerCase().includes(searchTerm.toLowerCase())
+            order.customer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
         const matchesStatus = statusFilter === 'all' || order.status === statusFilter
         return matchesSearch && matchesStatus
     })
@@ -166,8 +165,8 @@ export default function OrdersPage() {
                                         <TableCell className="font-mono font-medium">{order.order_number}</TableCell>
                                         <TableCell>
                                             <div className="flex flex-col">
-                                                <span className="font-medium">{order.user?.full_name || 'N/A'}</span>
-                                                <span className="text-xs text-gray-500">{order.user?.email}</span>
+                                                 {order.customer_name || 'N/A'}
+                                            <span className="block text-xs text-muted-foreground">{order.customer_email}</span>
                                             </div>
                                         </TableCell>
                                         <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
