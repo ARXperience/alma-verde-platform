@@ -23,6 +23,7 @@ interface Product {
     images: string[]
     description: string
     is_rental: boolean
+    slug?: string
 }
 
 export default function TiendaProductPage() {
