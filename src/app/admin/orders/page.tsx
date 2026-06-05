@@ -29,6 +29,7 @@ interface Order {
     order_number: string
     total: number
     status: string
+    payment_method?: string
     created_at: string
     user: {
         email: string
@@ -154,6 +155,7 @@ export default function OrdersPage() {
                                     <TableHead>Cliente</TableHead>
                                     <TableHead>Fecha</TableHead>
                                     <TableHead>Total</TableHead>
+                                    <TableHead>Pago</TableHead>
                                     <TableHead>Estado</TableHead>
                                     <TableHead className="text-right">Acciones</TableHead>
                                 </TableRow>
@@ -170,6 +172,11 @@ export default function OrdersPage() {
                                         </TableCell>
                                         <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                                         <TableCell>{formatCurrency(order.total)}</TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline" className="text-xs">
+                                                {order.payment_method || 'N/A'}
+                                            </Badge>
+                                        </TableCell>
                                         <TableCell>
                                             <Badge variant={STATUS_COLOR_MAP[order.status] || 'default'}>
                                                 {STATUS_MAP[order.status] || order.status}

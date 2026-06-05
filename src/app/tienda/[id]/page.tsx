@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
+import { useCart } from '@/contexts/CartContext'
 import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,7 @@ export default function TiendaProductPage() {
     const [loading, setLoading] = useState(true)
     const [activeImage, setActiveImage] = useState(0)
     const [isViewerOpen, setIsViewerOpen] = useState(false)
+    const { addItem, setIsOpen } = useCart()
 
     useEffect(() => {
         fetchProduct()
@@ -265,18 +267,29 @@ export default function TiendaProductPage() {
                                     <Button 
                                         className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-900/20 h-14 text-lg rounded-xl transition-all hover:scale-[1.02]"
                                         disabled={!product.in_stock}
-                                        onClick={handleQuote}
+                                        onClick={() => {
+                                            if (!product) return;
+                                            addItem({
+                                                productId: product.id,
+                                                name: product.name,
+                                                price: product.rental_price || 0, // Use rental price
+                                                quantity: 1,
+                                                image: product.images?.[0] || '',
+                                                businessUnit: product.business_unit
+                                            });
+                                            setIsOpen(true);
+                                        }}
                                     >
-                                        <RotateCcw className="mr-3 h-5 w-5" />
-                                        {product.in_stock ? 'Cotizar Renta' : 'Agotado'}
+                                        <ShoppingCart className="mr-3 h-5 w-5" />
+                                        {product.in_stock ? 'Agregar (Pago Anticipado)' : 'Agotado'}
                                     </Button>
                                     <Button 
                                         variant="outline"
                                         className="flex-1 border-gray-200 dark:border-[#1e402a] bg-white hover:bg-gray-50 dark:bg-[#152e1e] dark:hover:bg-[#1e402a] text-gray-900 dark:text-white font-bold h-14 text-lg rounded-xl transition-all shadow-sm"
                                         onClick={handleQuote}
                                     >
-                                        <MessageCircle className="mr-3 h-5 w-5 text-[#13ec5b]" />
-                                        Hablar por WhatsApp
+                                        <MessageCircle className="mr-3 h-5 w-5 text-blue-500" />
+                                        Cotizar por WhatsApp
                                     </Button>
                                 </>
                             ) : (
@@ -284,7 +297,18 @@ export default function TiendaProductPage() {
                                     <Button 
                                         className="flex-1 bg-[#13ec5b] hover:bg-[#13ec5b]/90 text-[#111813] font-bold shadow-lg shadow-[#13ec5b]/20 h-14 text-lg rounded-xl transition-all hover:scale-[1.02]"
                                         disabled={!product.in_stock}
-                                        onClick={() => alert('Integración con carrito próximamente')}
+                                        onClick={() => {
+                                            if (!product) return;
+                                            addItem({
+                                                productId: product.id,
+                                                name: product.name,
+                                                price: product.price,
+                                                quantity: 1,
+                                                image: product.images?.[0] || '',
+                                                businessUnit: product.business_unit
+                                            });
+                                            setIsOpen(true);
+                                        }}
                                     >
                                         <ShoppingCart className="mr-3 h-5 w-5" />
                                         {product.in_stock ? 'Agregar al Carrito' : 'Agotado'}

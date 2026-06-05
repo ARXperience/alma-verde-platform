@@ -39,6 +39,7 @@ interface Order {
     subtotal: number
     total: number
     shipping_address: string
+    payment_method?: string
     notes: string
     user: {
         email: string
@@ -277,6 +278,24 @@ export default function OrderDetailsPage() {
                             <div>
                                 <p className="text-sm font-medium text-gray-500">Dirección</p>
                                 <p>{order.shipping_address}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Payment Info */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Package className="h-5 w-5" />
+                                Pago
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div>
+                                <p className="text-sm font-medium text-gray-500">Método Seleccionado</p>
+                                <Badge variant="secondary" className="mt-1">
+                                    {order.payment_method || 'PENDING'}
+                                </Badge>
                             </div>
                         </CardContent>
                     </Card>

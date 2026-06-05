@@ -9,8 +9,15 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Loader2, ArrowLeft, CheckCircle, CreditCard, Building, Coins } from 'lucide-react'
 import Image from 'next/image'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 export default function CheckoutPage() {
     const router = useRouter()
@@ -21,6 +28,7 @@ export default function CheckoutPage() {
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
     const [orderNumber, setOrderNumber] = useState('')
+    const [paymentMethod, setPaymentMethod] = useState('stripe')
 
     const [formData, setFormData] = useState({
         fullName: user?.full_name || '',
@@ -75,7 +83,7 @@ export default function CheckoutPage() {
                     status: 'PENDING',
                     shipping_address: `${formData.address}, ${formData.city}`,
                     notes: formData.notes,
-                    payment_method: 'PENDING'
+                    payment_method: paymentMethod.toUpperCase()
                 })
                 .select()
                 .single()
@@ -99,10 +107,40 @@ export default function CheckoutPage() {
 
             if (itemsError) throw itemsError
 
-            // 3. Success
-            setOrderNumber(newOrderNumber)
-            setSuccess(true)
-            clearCart()
+            // 3. Success or Redirect based on payment method
+            if (paymentMethod === 'stripe') {
+                try {
+                    const res = await fetch('/api/checkout/stripe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            items,
+                            orderId: newOrderNumber,
+                            customerEmail: formData.email
+                        })
+                    })
+                    const data = await res.json()
+                    
+                    if (!res.ok) throw new Error(data.error || 'Failed to create Stripe session')
+                    
+                    if (data.url) {
+                        clearCart()
+                        window.location.href = data.url
+                        return // Wait for redirect
+                    }
+                } catch (stripeError) {
+                    console.error('Stripe error:', stripeError)
+                    alert('Error al iniciar pago con Stripe. Intenta con otro método.')
+                    // Don't set success, let them try again
+                    setLoading(false)
+                    return
+                }
+            } else {
+                // Bold or Cash -> Show success page with instructions
+                setOrderNumber(newOrderNumber)
+                setSuccess(true)
+                clearCart()
+            }
 
         } catch (error) {
             console.error('Error creating order:', error)
@@ -126,12 +164,34 @@ export default function CheckoutPage() {
                         <p className="text-gray-600 dark:text-gray-300">
                             Gracias por tu compra. Hemos recibido tu pedido exitosamente.
                         </p>
-                        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+                        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-4">
                             <p className="text-sm text-gray-500">Número de Orden</p>
                             <p className="text-xl font-bold font-mono">{orderNumber}</p>
                         </div>
-                        <p className="text-sm text-gray-500">
-                            Te contactaremos pronto para coordinar el pago y envío.
+                        {paymentMethod === 'bold' && (
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-left border border-blue-100 dark:border-blue-800">
+                                <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2">Instrucciones de Pago (Bold / Transferencia)</h4>
+                                <p className="text-sm text-blue-700 dark:text-blue-400 mb-2">
+                                    Por favor realiza una transferencia a la cuenta Bancolombia #123456789 a nombre de Alma Verde.
+                                </p>
+                                <p className="text-sm text-blue-700 dark:text-blue-400 font-bold">
+                                    Total a transferir: {formatCurrency(cartTotal)}
+                                </p>
+                                <p className="text-xs text-blue-600/80 dark:text-blue-400/80 mt-2">
+                                    Envía el comprobante a nuestro WhatsApp haciendo referencia a tu número de orden.
+                                </p>
+                            </div>
+                        )}
+                        {paymentMethod === 'cash' && (
+                            <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg text-left border border-orange-100 dark:border-orange-800">
+                                <h4 className="font-bold text-orange-800 dark:text-orange-300 mb-2">Pago a Convenir (Efectivo)</h4>
+                                <p className="text-sm text-orange-700 dark:text-orange-400">
+                                    Has seleccionado pago a convenir. Nuestro equipo te contactará pronto para coordinar el método de pago y la entrega.
+                                </p>
+                            </div>
+                        )}
+                        <p className="text-sm text-gray-500 mt-4">
+                            Te contactaremos pronto para coordinar la entrega.
                         </p>
                     </CardContent>
                     <CardFooter>
@@ -278,6 +338,44 @@ export default function CheckoutPage() {
                                         onChange={handleInputChange}
                                         placeholder="Instrucciones especiales para la entrega"
                                     />
+                                </div>
+
+                                <div className="space-y-3 pt-4 border-t">
+                                    <Label className="text-lg font-bold">Método de Pago</Label>
+                                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                                        <SelectTrigger className="w-full h-14 text-md">
+                                            <SelectValue placeholder="Selecciona un método de pago" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="stripe">
+                                                <div className="flex items-center">
+                                                    <CreditCard className="w-5 h-5 mr-3 text-blue-500" />
+                                                    <div>
+                                                        <p className="font-bold">Tarjeta de Crédito / Débito</p>
+                                                        <p className="text-xs text-gray-500">Pago seguro vía Stripe</p>
+                                                    </div>
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem value="bold">
+                                                <div className="flex items-center">
+                                                    <Building className="w-5 h-5 mr-3 text-purple-500" />
+                                                    <div>
+                                                        <p className="font-bold">Transferencia Bancaria</p>
+                                                        <p className="text-xs text-gray-500">Transferencia / Link de Bold</p>
+                                                    </div>
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem value="cash">
+                                                <div className="flex items-center">
+                                                    <Coins className="w-5 h-5 mr-3 text-green-500" />
+                                                    <div>
+                                                        <p className="font-bold">Pago a Convenir / Efectivo</p>
+                                                        <p className="text-xs text-gray-500">Coordinar con nuestro equipo</p>
+                                                    </div>
+                                                </div>
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 <Button type="submit" className="w-full h-12 text-lg" disabled={loading}>

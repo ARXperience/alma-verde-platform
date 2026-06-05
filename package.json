@@ -24,6 +24,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.2.15",
+    "@stripe/stripe-js": "^9.7.0",
     "@supabase/auth-helpers-nextjs": "^0.8.7",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.93.3",
@@ -40,6 +41,7 @@
     "react-hook-form": "^7.49.3",
     "recharts": "^2.10.3",
     "sharp": "^0.33.2",
+    "stripe": "^22.2.0",
     "tailwind-merge": "^2.2.0",
     "zod": "^3.22.4",
     "zustand": "^4.4.7"
