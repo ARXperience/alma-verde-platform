@@ -195,7 +195,7 @@ function WhatsAppTab() {
 Ubicados en Colombia. Ofrecemos soluciones integrales de diseño con IA.
 Teléfono: +57 XXX XXX XXXX
 Email: centrodigitaldediseno@gmail.com
-Web: almaverdediseno.com`
+Web: almaverdediseno.com`)
     const [behavior, setBehavior] = useState('Cargando...')
     const [saving, setSaving] = useState(false)
     const [restarting, setRestarting] = useState(false)
@@ -273,34 +273,9 @@ Web: almaverdediseno.com`
                     <CardDescription>Conecta tu WhatsApp Business para activar el bot de respuestas automáticas con IA</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center gap-6">
-                        {/* Status indicator */}
-                        <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl font-bold text-sm ${
-                            botStatus === 'connected'
-                                ? 'bg-green-50 text-green-700'
-                                : botStatus === 'qr_ready'
-                                ? 'bg-yellow-50 text-yellow-700'
-                                : 'bg-red-50 text-red-700'
-                        }`}>
-                            {botStatus === 'connected' ? (
-                                <><Wifi className="w-5 h-5" /> Conectado</>
-                            ) : botStatus === 'qr_ready' ? (
-                                <><QrCode className="w-5 h-5" /> Esperando escaneo QR</>
-                            ) : (
-                                <><WifiOff className="w-5 h-5" /> Desconectado</>
-                            )}
-                        </div>
-
-                        {/* Auto reply toggle */}
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <div className="relative">
-                                <input
-                                    type="checkbox"
-                                    checked={autoReply}
-                                    onChange={() => setAutoReply(!autoReply)}
-                                    className="sr-only"
-                                />
+                    <div className="flex flex-col gap-6">
                         <div className="flex items-center gap-6">
+                            {/* Status indicator */}
                             <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl font-bold text-sm ${
                                 botStatus === 'connected'
                                     ? 'bg-green-50 text-green-700'
@@ -338,7 +313,7 @@ Web: almaverdediseno.com`
                         <Button
                             variant="destructive"
                             size="sm"
-                            className="rounded-xl"
+                            className="rounded-xl self-start"
                             disabled={restarting}
                             onClick={async () => {
                                 if (!confirm('¿Estás seguro de que quieres forzar un nuevo código QR? Esto desconectará la sesión actual.')) return;

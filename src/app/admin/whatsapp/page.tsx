@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search, Loader2, MessageSquare, Phone, User, Clock, Bot, User as UserIcon } from 'lucide-react'
 
 interface ChatMessage {
@@ -92,7 +91,7 @@ export default function WhatsAppConversationsPage() {
                             />
                         </div>
                     </CardHeader>
-                    <ScrollArea className="flex-1 px-4 pb-4">
+                    <div className="flex-1 px-4 pb-4 overflow-y-auto">
                         <div className="space-y-2">
                             {filteredLeads.length === 0 ? (
                                 <p className="text-center text-slate-400 text-sm py-8">No hay conversaciones</p>
@@ -128,7 +127,7 @@ export default function WhatsAppConversationsPage() {
                                 ))
                             )}
                         </div>
-                    </ScrollArea>
+                    </div>
                 </Card>
 
                 {/* Chat Viewer */}
@@ -156,7 +155,7 @@ export default function WhatsAppConversationsPage() {
                             </CardHeader>
 
                             {/* Chat Messages */}
-                            <ScrollArea className="flex-1 p-6">
+                            <div className="flex-1 p-6 overflow-y-auto">
                                 <div className="space-y-4 max-w-3xl mx-auto">
                                     {selectedLead.conversation?.map((msg, i) => (
                                         <div key={i} className={`flex ${msg.role === 'user' ? 'justify-start' : 'justify-end'}`}>
@@ -178,7 +177,7 @@ export default function WhatsAppConversationsPage() {
                                         </div>
                                     )}
                                 </div>
-                            </ScrollArea>
+                            </div>
                             
                             {/* Chat Footer */}
                             <div className="p-4 bg-white border-t border-slate-100 text-center">
