@@ -198,7 +198,7 @@ Email: centrodigitaldediseno@gmail.com
 Web: almaverdediseno.com`
     )
     const [saving, setSaving] = useState(false)
-    const BOT_URL = process.env.NEXT_PUBLIC_WHATSAPP_BOT_URL || 'http://localhost:3001'
+    const BOT_URL = process.env.NEXT_PUBLIC_WHATSAPP_BOT_URL || 'https://bot.almaverdediseno.com'
 
     // Poll bot status
     useEffect(() => {
