@@ -5,6 +5,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { createClient } = require('@supabase/supabase-js');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
@@ -15,7 +16,12 @@ const execAsync = promisify(exec);
 const PORT = process.env.WHATSAPP_BOT_PORT || 3001;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const KNOWLEDGE_FILE = path.join(__dirname, 'knowledge', 'base.txt');
+const BEHAVIOR_FILE = path.join(__dirname, 'knowledge', 'behavior.txt');
 const SESSION_DIR = path.join(__dirname, 'session');
+
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // Ensure directories exist
 if (!fs.existsSync(path.join(__dirname, 'knowledge'))) fs.mkdirSync(path.join(__dirname, 'knowledge'), { recursive: true });
@@ -27,7 +33,15 @@ if (!fs.existsSync(KNOWLEDGE_FILE)) {
 Servicios: Stands para ferias, eventos corporativos, branding, decoración, muebles (Alma Home).
 Teléfono: +57 XXX XXX XXXX
 Email: centrodigitaldediseno@gmail.com
-Web: almaverdediseno.com`);
+}
+
+// Default behavior base
+if (!fs.existsSync(BEHAVIOR_FILE)) {
+    fs.writeFileSync(BEHAVIOR_FILE, `Eres el asistente virtual de Alma Verde Diseño por WhatsApp. 
+Responde de forma amigable, profesional y concisa en español.
+Usa emojis moderadamente.
+Si el cliente pregunta por precios, invítalo a cotizar en almaverdediseno.com/cotizar o a enviar detalles de su proyecto.
+Si detectas intención de compra o cotización, recopila: nombre, tipo de proyecto, presupuesto aproximado.`);
 }
 
 // =============================================
@@ -68,6 +82,18 @@ function setKnowledge(text) {
     fs.writeFileSync(KNOWLEDGE_FILE, text, 'utf-8');
 }
 
+function getBehavior() {
+    try {
+        return fs.readFileSync(BEHAVIOR_FILE, 'utf-8');
+    } catch {
+        return '';
+    }
+}
+
+function setBehavior(text) {
+    fs.writeFileSync(BEHAVIOR_FILE, text, 'utf-8');
+}
+
 // =============================================
 // GEMINI FUNCTIONS
 // =============================================
@@ -82,11 +108,8 @@ async function getAIResponse(phone, userMessage) {
     if (history.length > 20) history.splice(0, history.length - 20);
 
     const knowledge = getKnowledge();
-    const systemPrompt = `Eres el asistente virtual de Alma Verde Diseño por WhatsApp. 
-Responde de forma amigable, profesional y concisa en español.
-Usa emojis moderadamente.
-Si el cliente pregunta por precios, invítalo a cotizar en almaverdediseno.com/cotizar o a enviar detalles de su proyecto.
-Si detectas intención de compra o cotización, recopila: nombre, tipo de proyecto, presupuesto aproximado.
+    const behavior = getBehavior();
+    const systemPrompt = `${behavior}
 
 BASE DE CONOCIMIENTOS:
 ${knowledge}
@@ -102,6 +125,11 @@ Responde al último mensaje del cliente de forma natural y breve (máximo 3 pár
 
         history.push({ role: 'assistant', content: response });
         conversationCache.set(phone, history);
+
+        // Sync to Supabase
+        if (supabase) {
+            syncToSupabase(phone, history, userMessage);
+        }
 
         return response;
     } catch (error) {
@@ -133,6 +161,45 @@ async function transcribeAudio(audioBuffer) {
     } catch (error) {
         console.error('Audio transcription error:', error);
         return null;
+    }
+}
+
+// Sync to Supabase table: whatsapp_leads
+async function syncToSupabase(phone, history, lastUserMessage) {
+    try {
+        // AI can help detect intent
+        let intent = 'soporte';
+        if (lastUserMessage.toLowerCase().includes('cotiza') || lastUserMessage.toLowerCase().includes('precio')) {
+            intent = 'cotizacion';
+        }
+
+        const formattedPhone = phone.replace('@s.whatsapp.net', '');
+
+        // Check if lead exists
+        const { data: existing } = await supabase
+            .from('whatsapp_leads')
+            .select('id')
+            .eq('phone', formattedPhone)
+            .single();
+
+        if (existing) {
+            await supabase.from('whatsapp_leads').update({
+                conversation: history,
+                last_message: lastUserMessage,
+                intent,
+                updated_at: new Date().toISOString()
+            }).eq('id', existing.id);
+        } else {
+            await supabase.from('whatsapp_leads').insert({
+                phone: formattedPhone,
+                conversation: history,
+                last_message: lastUserMessage,
+                intent,
+                status: 'OPEN'
+            });
+        }
+    } catch (error) {
+        console.error('Supabase sync error:', error);
     }
 }
 
@@ -301,6 +368,36 @@ app.post('/knowledge', (req, res) => {
 
 app.get('/knowledge', (req, res) => {
     res.json({ knowledge: getKnowledge() });
+});
+
+// Behavior endpoint
+app.post('/behavior', (req, res) => {
+    const { behavior } = req.body;
+    if (!behavior) return res.status(400).json({ error: 'behavior field required' });
+    setBehavior(behavior);
+    res.json({ success: true });
+});
+
+app.get('/behavior', (req, res) => {
+    res.json({ behavior: getBehavior() });
+});
+
+// Restart endpoint (For generating new QR)
+app.post('/restart', async (req, res) => {
+    console.log('🔄 Restarting WhatsApp connection to clear session...');
+    res.json({ success: true, message: 'Restarting in 2 seconds...' });
+    
+    // Allow response to send before killing process
+    setTimeout(() => {
+        if (sock) {
+            try { sock.logout(); } catch (e) {}
+        }
+        if (fs.existsSync(SESSION_DIR)) {
+            fs.rmSync(SESSION_DIR, { recursive: true, force: true });
+            console.log('🗑️ Session directory deleted.');
+        }
+        process.exit(1); // PM2 or Hostinger will restart it
+    }, 2000);
 });
 
 // Toggle auto-reply

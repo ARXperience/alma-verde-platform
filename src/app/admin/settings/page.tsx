@@ -196,12 +196,33 @@ Ubicados en Colombia. Ofrecemos soluciones integrales de diseño con IA.
 Teléfono: +57 XXX XXX XXXX
 Email: centrodigitaldediseno@gmail.com
 Web: almaverdediseno.com`
-    )
+    const [behavior, setBehavior] = useState('Cargando...')
     const [saving, setSaving] = useState(false)
+    const [restarting, setRestarting] = useState(false)
     const BOT_URL = process.env.NEXT_PUBLIC_WHATSAPP_BOT_URL || 'https://bot.almaverdediseno.com'
 
     // Poll bot status
     useEffect(() => {
+        const fetchInitialData = async () => {
+            try {
+                const [knowRes, behavRes] = await Promise.all([
+                    fetch(`${BOT_URL}/knowledge`),
+                    fetch(`${BOT_URL}/behavior`)
+                ])
+                if (knowRes.ok) {
+                    const data = await knowRes.json()
+                    setKnowledge(data.knowledge)
+                }
+                if (behavRes.ok) {
+                    const data = await behavRes.json()
+                    setBehavior(data.behavior)
+                }
+            } catch (e) {
+                console.error('Could not load bot config')
+            }
+        }
+        fetchInitialData()
+
         const interval = setInterval(async () => {
             try {
                 const res = await fetch(`${BOT_URL}/status`, { signal: AbortSignal.timeout(3000) })
@@ -227,7 +248,12 @@ Web: almaverdediseno.com`
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ knowledge }),
             })
-            alert('Base de conocimientos actualizada')
+            await fetch(`${BOT_URL}/behavior`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ behavior }),
+            })
+            alert('Configuración actualizada exitosamente')
         } catch {
             alert('No se pudo conectar con el servidor del bot. Asegúrate de que esté corriendo.')
         } finally {
@@ -274,12 +300,62 @@ Web: almaverdediseno.com`
                                     onChange={() => setAutoReply(!autoReply)}
                                     className="sr-only"
                                 />
-                                <div className={`w-12 h-6 rounded-full transition-colors ${autoReply ? 'bg-[#13ec5b]' : 'bg-gray-300'}`}>
-                                    <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${autoReply ? 'translate-x-6' : 'translate-x-0.5'} mt-0.5`} />
-                                </div>
+                        <div className="flex items-center gap-6">
+                            <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl font-bold text-sm ${
+                                botStatus === 'connected'
+                                    ? 'bg-green-50 text-green-700'
+                                    : botStatus === 'qr_ready'
+                                    ? 'bg-yellow-50 text-yellow-700'
+                                    : 'bg-red-50 text-red-700'
+                            }`}>
+                                {botStatus === 'connected' ? (
+                                    <><Wifi className="w-5 h-5" /> Conectado</>
+                                ) : botStatus === 'qr_ready' ? (
+                                    <><QrCode className="w-5 h-5" /> Esperando escaneo QR</>
+                                ) : (
+                                    <><WifiOff className="w-5 h-5" /> Desconectado</>
+                                )}
                             </div>
-                            <span className="text-sm font-medium">Respuestas automáticas</span>
-                        </label>
+
+                            {/* Auto reply toggle */}
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        checked={autoReply}
+                                        onChange={() => setAutoReply(!autoReply)}
+                                        className="sr-only"
+                                    />
+                                    <div className={`w-12 h-6 rounded-full transition-colors ${autoReply ? 'bg-[#13ec5b]' : 'bg-gray-300'}`}>
+                                        <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform ${autoReply ? 'translate-x-6' : 'translate-x-0.5'} mt-0.5`} />
+                                    </div>
+                                </div>
+                                <span className="text-sm font-medium">Respuestas automáticas</span>
+                            </label>
+                        </div>
+
+                        {/* Restart Button */}
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            className="rounded-xl"
+                            disabled={restarting}
+                            onClick={async () => {
+                                if (!confirm('¿Estás seguro de que quieres forzar un nuevo código QR? Esto desconectará la sesión actual.')) return;
+                                setRestarting(true);
+                                try {
+                                    await fetch(`${BOT_URL}/restart`, { method: 'POST' });
+                                    alert('Reiniciando conexión... Espera unos segundos y aparecerá el nuevo QR.');
+                                } catch (e) {
+                                    alert('Error al intentar reiniciar. Asegúrate de que el servidor esté vivo.');
+                                } finally {
+                                    setRestarting(false);
+                                }
+                            }}
+                        >
+                            {restarting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <QrCode className="w-4 h-4 mr-2" />}
+                            Forzar Nuevo QR
+                        </Button>
                     </div>
 
                     {/* QR Code display */}
@@ -302,29 +378,49 @@ Web: almaverdediseno.com`
                 </CardContent>
             </Card>
 
-            {/* Knowledge Base */}
-            <Card className="border-none shadow-sm rounded-3xl bg-white">
-                <CardHeader>
-                    <CardTitle>Base de Conocimientos</CardTitle>
-                    <CardDescription>
-                        El bot usará esta información para responder preguntas de clientes. Incluye servicios, precios, horarios, etc.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <textarea
-                        value={knowledge}
-                        onChange={e => setKnowledge(e.target.value)}
-                        className="w-full min-h-[300px] p-4 border rounded-xl resize-y text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#13ec5b]/50"
-                        placeholder="Escribe aquí la información que el bot debe conocer sobre tu negocio..."
-                    />
-                    <div className="flex justify-end">
-                        <Button onClick={saveKnowledge} disabled={saving} className="rounded-xl">
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                            Guardar Base de Conocimientos
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Behavior & Knowledge Base */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="border-none shadow-sm rounded-3xl bg-white">
+                    <CardHeader>
+                        <CardTitle>Comportamiento de la IA</CardTitle>
+                        <CardDescription>
+                            Define la personalidad, tono de voz y las instrucciones principales de cómo debe actuar el bot.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <textarea
+                            value={behavior}
+                            onChange={e => setBehavior(e.target.value)}
+                            className="w-full min-h-[300px] p-4 border rounded-xl resize-y text-sm focus:outline-none focus:ring-2 focus:ring-[#13ec5b]/50"
+                            placeholder="Escribe el prompt de sistema..."
+                        />
+                    </CardContent>
+                </Card>
+
+                <Card className="border-none shadow-sm rounded-3xl bg-white">
+                    <CardHeader>
+                        <CardTitle>Base de Conocimientos</CardTitle>
+                        <CardDescription>
+                            Información sobre servicios, precios, horarios, etc. que el bot puede usar para responder.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <textarea
+                            value={knowledge}
+                            onChange={e => setKnowledge(e.target.value)}
+                            className="w-full min-h-[300px] p-4 border rounded-xl resize-y text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#13ec5b]/50"
+                            placeholder="Escribe aquí la información..."
+                        />
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="flex justify-end">
+                <Button onClick={saveKnowledge} disabled={saving} className="rounded-xl">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                    Guardar Configuración IA
+                </Button>
+            </div>
         </div>
     )
 }

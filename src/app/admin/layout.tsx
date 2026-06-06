@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext' // Assuming this exists or using supabase
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Loader2, LayoutDashboard, FileText, Settings, Users, ShoppingBag, LogOut, Package, ShoppingCart, Globe } from 'lucide-react'
+import { Loader2, LayoutDashboard, FileText, Settings, Users, ShoppingBag, LogOut, Package, ShoppingCart, Globe, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
@@ -98,6 +98,7 @@ export default function AdminLayout({
                     <NavLink href="/admin/products" icon={<Package size={20} />} label="Productos Web" />
                     <NavLink href="/admin/orders" icon={<ShoppingCart size={20} />} label="Ordenes Web" />
                     <NavLink href="/admin/quotations" icon={<ShoppingBag size={20} />} label="Cotizaciones CRM" />
+                    <NavLink href="/admin/whatsapp" icon={<MessageSquare size={20} />} label="Mensajes WhatsApp" />
                     <NavLink href="/admin/users" icon={<Users size={20} />} label="Usuarios" />
                     <NavLink href="/admin/settings" icon={<Settings size={20} />} label="Configuración" />
                 </nav>
