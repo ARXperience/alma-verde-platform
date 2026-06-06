@@ -32,7 +32,7 @@ if (!fs.existsSync(KNOWLEDGE_FILE)) {
     fs.writeFileSync(KNOWLEDGE_FILE, `Alma Verde Diseño es una agencia de diseño y productora de eventos.
 Servicios: Stands para ferias, eventos corporativos, branding, decoración, muebles (Alma Home).
 Teléfono: +57 XXX XXX XXXX
-Email: centrodigitaldediseno@gmail.com
+Email: centrodigitaldediseno@gmail.com`);
 }
 
 // Default behavior base
