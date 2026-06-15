@@ -199,7 +199,7 @@ Web: almaverdediseno.com`)
     const [behavior, setBehavior] = useState('Cargando...')
     const [saving, setSaving] = useState(false)
     const [restarting, setRestarting] = useState(false)
-    const BOT_URL = process.env.NEXT_PUBLIC_WHATSAPP_BOT_URL || 'https://bot.almaverdediseno.com'
+    const BOT_URL = process.env.NEXT_PUBLIC_BOT_URL || 'https://app.almaverdediseno.com/api/whatsapp'
 
     // Poll bot status
     useEffect(() => {
