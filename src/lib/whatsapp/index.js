@@ -1,30 +1,27 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, downloadMediaMessage } = require('@whiskeysockets/baileys');
-const { Boom } = require('@hapi/boom');
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { createClient } = require('@supabase/supabase-js');
-const { exec } = require('child_process');
-const { promisify } = require('util');
-const execAsync = promisify(exec);
+const fs = require('fs');
+const path = require('path');
+const cors = require('cors');
+const express = require('express');
 
 // =============================================
 // CONFIGURATION
 // =============================================
-const PORT = process.env.WHATSAPP_BOT_PORT || 3001;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const KNOWLEDGE_FILE = path.join(__dirname, 'knowledge', 'base.txt');
-const BEHAVIOR_FILE = path.join(__dirname, 'knowledge', 'behavior.txt');
-const SESSION_DIR = path.join(__dirname, 'session');
+const KNOWLEDGE_DIR = path.join(__dirname, 'knowledge');
+const KNOWLEDGE_FILE = path.join(KNOWLEDGE_DIR, 'base.txt');
+const BEHAVIOR_FILE = path.join(KNOWLEDGE_DIR, 'behavior.txt');
+// Place session in the root folder so it's not inside src
+const SESSION_DIR = path.join(process.cwd(), '.whatsapp-session');
 
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // Ensure directories exist
-if (!fs.existsSync(path.join(__dirname, 'knowledge'))) fs.mkdirSync(path.join(__dirname, 'knowledge'), { recursive: true });
+if (!fs.existsSync(KNOWLEDGE_DIR)) fs.mkdirSync(KNOWLEDGE_DIR, { recursive: true });
 if (!fs.existsSync(SESSION_DIR)) fs.mkdirSync(SESSION_DIR, { recursive: true });
 
 // Default knowledge base
@@ -53,7 +50,7 @@ let geminiModel = null;
 if (GEMINI_API_KEY) {
     genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-    console.log('✅ Gemini AI initialized');
+    console.log('✅ Gemini AI initialized for WhatsApp Bot');
 } else {
     console.warn('⚠️ No GEMINI_API_KEY set. Bot will use fallback responses.');
 }
@@ -142,11 +139,8 @@ async function transcribeAudio(audioBuffer) {
     if (!genAI) return null;
 
     try {
-        // Gemini can process audio directly
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-        
         const audioBase64 = audioBuffer.toString('base64');
-        
         const result = await model.generateContent([
             {
                 inlineData: {
@@ -164,10 +158,8 @@ async function transcribeAudio(audioBuffer) {
     }
 }
 
-// Sync to Supabase table: whatsapp_leads
 async function syncToSupabase(phone, history, lastUserMessage) {
     try {
-        // AI can help detect intent
         let intent = 'soporte';
         if (lastUserMessage.toLowerCase().includes('cotiza') || lastUserMessage.toLowerCase().includes('precio')) {
             intent = 'cotizacion';
@@ -175,7 +167,6 @@ async function syncToSupabase(phone, history, lastUserMessage) {
 
         const formattedPhone = phone.replace('@s.whatsapp.net', '');
 
-        // Check if lead exists
         const { data: existing } = await supabase
             .from('whatsapp_leads')
             .select('id')
@@ -215,12 +206,10 @@ async function startWhatsApp() {
         browser: ['Alma Verde Bot', 'Chrome', '4.0.0'],
     });
 
-    // Connection updates
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
-            // Convert QR to data URL for the admin panel
             const QRCode = require('qrcode');
             QRCode.toDataURL(qr, (err, url) => {
                 if (!err) {
@@ -247,10 +236,8 @@ async function startWhatsApp() {
         }
     });
 
-    // Save credentials
     sock.ev.on('creds.update', saveCreds);
 
-    // Message handler
     sock.ev.on('messages.upsert', async (m) => {
         if (!autoReplyEnabled) return;
 
@@ -258,45 +245,33 @@ async function startWhatsApp() {
         if (!msg || msg.key.fromMe || !msg.message) return;
 
         const phone = msg.key.remoteJid;
-        if (!phone || phone.includes('@g.us')) return; // Skip group messages
+        if (!phone || phone.includes('@g.us')) return; 
 
         try {
             let userMessage = '';
 
-            // Text message
             if (msg.message.conversation) {
                 userMessage = msg.message.conversation;
             } else if (msg.message.extendedTextMessage) {
                 userMessage = msg.message.extendedTextMessage.text;
-            }
-            // Audio message
-            else if (msg.message.audioMessage) {
+            } else if (msg.message.audioMessage) {
                 console.log(`🎤 Audio received from ${phone}`);
-                
-                // Download audio
                 const buffer = await downloadMediaMessage(msg, 'buffer', {});
-                
-                // Transcribe with Gemini
                 const transcription = await transcribeAudio(buffer);
                 
                 if (transcription) {
                     userMessage = transcription;
-                    // Let the user know we understood their audio
                     await sock.sendMessage(phone, { text: `🎤 _Entendí tu audio:_ "${transcription}"\n\n` });
-                    await new Promise(r => setTimeout(r, 1000)); // Small delay
+                    await new Promise(r => setTimeout(r, 1000)); 
                 } else {
                     await sock.sendMessage(phone, {
                         text: '🎤 Recibí tu audio pero no pude procesarlo. ¿Podrías escribirme tu consulta? 😊'
                     });
                     return;
                 }
-            }
-            // Image or other media
-            else if (msg.message.imageMessage) {
+            } else if (msg.message.imageMessage) {
                 userMessage = msg.message.imageMessage.caption || 'El cliente envió una imagen.';
-            }
-            // Unsupported message type
-            else {
+            } else {
                 return;
             }
 
@@ -304,12 +279,8 @@ async function startWhatsApp() {
 
             console.log(`💬 ${phone}: ${userMessage}`);
 
-            // Get AI response
             const response = await getAIResponse(phone, userMessage);
-
-            // Send response
             await sock.sendMessage(phone, { text: response });
-
             console.log(`🤖 → ${phone}: ${response.substring(0, 100)}...`);
 
         } catch (error) {
@@ -319,97 +290,99 @@ async function startWhatsApp() {
 }
 
 // =============================================
-// EXPRESS API SERVER
+// INITIALIZE & MOUNT ROUTES
 // =============================================
-const app = express();
-app.use(cors());
-app.use(express.json());
+function initWhatsAppBot(app) {
+    // Create a sub-router for WhatsApp API
+    const botRouter = express.Router();
+    botRouter.use(cors());
+    botRouter.use(express.json());
 
-// Status endpoint
-app.get('/status', (req, res) => {
-    res.json({
-        status: connectionStatus,
-        qr: qrImage,
-        autoReply: autoReplyEnabled,
+    botRouter.get('/status', (req, res) => {
+        res.json({
+            status: connectionStatus,
+            qr: qrImage,
+            autoReply: autoReplyEnabled,
+        });
     });
-});
 
-// QR code endpoint
-app.get('/qr', (req, res) => {
-    if (qrImage) {
-        res.json({ qr: qrImage });
-    } else {
-        res.status(404).json({ error: 'No QR available' });
-    }
-});
+    botRouter.get('/qr', (req, res) => {
+        if (qrImage) {
+            res.json({ qr: qrImage });
+        } else {
+            res.status(404).json({ error: 'No QR available' });
+        }
+    });
 
-// Send message endpoint
-app.post('/send', async (req, res) => {
-    const { phone, message } = req.body;
-    if (!sock || connectionStatus !== 'connected') {
-        return res.status(400).json({ error: 'WhatsApp not connected' });
-    }
-    try {
-        const jid = phone.includes('@') ? phone : `${phone}@s.whatsapp.net`;
-        await sock.sendMessage(jid, { text: message });
+    botRouter.post('/send', async (req, res) => {
+        const { phone, message } = req.body;
+        if (!sock || connectionStatus !== 'connected') {
+            return res.status(400).json({ error: 'WhatsApp not connected' });
+        }
+        try {
+            const jid = phone.includes('@') ? phone : `${phone}@s.whatsapp.net`;
+            await sock.sendMessage(jid, { text: message });
+            res.json({ success: true });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    botRouter.post('/knowledge', (req, res) => {
+        const { knowledge } = req.body;
+        if (!knowledge) return res.status(400).json({ error: 'knowledge field required' });
+        setKnowledge(knowledge);
         res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+    });
 
-// Knowledge base endpoint
-app.post('/knowledge', (req, res) => {
-    const { knowledge } = req.body;
-    if (!knowledge) return res.status(400).json({ error: 'knowledge field required' });
-    setKnowledge(knowledge);
-    res.json({ success: true });
-});
+    botRouter.get('/knowledge', (req, res) => {
+        res.json({ knowledge: getKnowledge() });
+    });
 
-app.get('/knowledge', (req, res) => {
-    res.json({ knowledge: getKnowledge() });
-});
+    botRouter.post('/behavior', (req, res) => {
+        const { behavior } = req.body;
+        if (!behavior) return res.status(400).json({ error: 'behavior field required' });
+        setBehavior(behavior);
+        res.json({ success: true });
+    });
 
-// Behavior endpoint
-app.post('/behavior', (req, res) => {
-    const { behavior } = req.body;
-    if (!behavior) return res.status(400).json({ error: 'behavior field required' });
-    setBehavior(behavior);
-    res.json({ success: true });
-});
+    botRouter.get('/behavior', (req, res) => {
+        res.json({ behavior: getBehavior() });
+    });
 
-app.get('/behavior', (req, res) => {
-    res.json({ behavior: getBehavior() });
-});
+    botRouter.post('/restart', async (req, res) => {
+        console.log('🔄 Restarting WhatsApp connection to clear session...');
+        res.json({ success: true, message: 'Restarting in 2 seconds...' });
+        
+        setTimeout(() => {
+            if (sock) {
+                try { sock.logout(); } catch (e) {}
+            }
+            if (fs.existsSync(SESSION_DIR)) {
+                fs.rmSync(SESSION_DIR, { recursive: true, force: true });
+                console.log('🗑️ Session directory deleted.');
+            }
+            // In a custom Next.js server, killing the process will shut down Next.js too.
+            // A better way is just to clear the directory and call startWhatsApp again:
+            connectionStatus = 'disconnected';
+            qrImage = null;
+            setTimeout(() => {
+                startWhatsApp();
+                console.log('🔄 Session cleared, generating new QR code...');
+            }, 1000);
+        }, 2000);
+    });
 
-// Restart endpoint (For generating new QR)
-app.post('/restart', async (req, res) => {
-    console.log('🔄 Restarting WhatsApp connection to clear session...');
-    res.json({ success: true, message: 'Restarting in 2 seconds...' });
-    
-    // Allow response to send before killing process
-    setTimeout(() => {
-        if (sock) {
-            try { sock.logout(); } catch (e) {}
-        }
-        if (fs.existsSync(SESSION_DIR)) {
-            fs.rmSync(SESSION_DIR, { recursive: true, force: true });
-            console.log('🗑️ Session directory deleted.');
-        }
-        process.exit(1); // PM2 or Hostinger will restart it
-    }, 2000);
-});
+    botRouter.post('/toggle-auto-reply', (req, res) => {
+        autoReplyEnabled = !autoReplyEnabled;
+        res.json({ autoReply: autoReplyEnabled });
+    });
 
-// Toggle auto-reply
-app.post('/toggle-auto-reply', (req, res) => {
-    autoReplyEnabled = !autoReplyEnabled;
-    res.json({ autoReply: autoReplyEnabled });
-});
+    // Mount at /api/whatsapp
+    app.use('/api/whatsapp', botRouter);
 
-// =============================================
-// START
-// =============================================
-app.listen(PORT, () => {
-    console.log(`🚀 WhatsApp Bot API running on port ${PORT}`);
+    // Start Baileys socket connection
     startWhatsApp();
-});
+}
+
+module.exports = { initWhatsAppBot };
