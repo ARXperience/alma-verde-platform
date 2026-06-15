@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { generateImage } from '@/lib/openai/client'
+
 import { createAdminClient } from '@/lib/supabase/server'
 
 // Robust UUID generator fallback
@@ -48,17 +48,17 @@ export async function POST(request: Request) {
             imagePrompt += `. Note: ${instructions}`
         }
 
-        console.log('[GenerateImage] Generating with DALL-E 3...')
+        console.log('[GenerateImage] Generating with Pollinations AI...')
 
-        // Generate with DALL-E 3
-        console.log('[GenerateImage] Requesting image from DALL-E...')
-        const dalleUrl = await generateImage(imagePrompt, '1792x1024', 'hd')
-        console.log('[GenerateImage] DALL-E URL received:', dalleUrl)
+        // Generate with Pollinations AI (Free, no API key needed)
+        console.log('[GenerateImage] Requesting image from Pollinations...')
+        const dalleUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1792&height=1024&nologo=true`
+        console.log('[GenerateImage] Pollinations URL generated:', dalleUrl)
 
         // PERSISTENCE: Download image and upload to Supabase Storage
-        console.log('[GenerateImage] Downloading from DALL-E...')
+        console.log('[GenerateImage] Downloading from Pollinations...')
         const imageRes = await fetch(dalleUrl)
-        if (!imageRes.ok) throw new Error(`Failed to download image from DALL-E: ${imageRes.statusText}`)
+        if (!imageRes.ok) throw new Error(`Failed to download image from Pollinations: ${imageRes.statusText}`)
         const imageBuffer = await imageRes.arrayBuffer()
         console.log('[GenerateImage] Image downloaded, buffer size:', imageBuffer.byteLength)
 
