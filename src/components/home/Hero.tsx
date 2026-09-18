@@ -5,32 +5,32 @@ import Link from 'next/link'
 
 const heroSlides = [
     {
-        image: '/hero-slides/slide-1.png',
+        image: '/hero-slides/slide-1.webp',
         headline: 'Diseñamos espacios que hacen destacar tu marca',
         subtitle: 'Stands, exhibiciones y ambientes comerciales con diseño sustentable y vanguardista.',
     },
     {
-        image: '/hero-slides/slide-2.png',
+        image: '/hero-slides/slide-2.webp',
         headline: 'Transformamos ideas en experiencias memorables',
         subtitle: 'Espacios comerciales que conectan emocionalmente con tu audiencia.',
     },
     {
-        image: '/hero-slides/slide-3.png',
+        image: '/hero-slides/slide-3.webp',
         headline: 'Activaciones de marca que generan impacto',
         subtitle: 'Eventos y experiencias inmersivas diseñadas para dejar huella.',
     },
     {
-        image: '/hero-slides/slide-4.png',
+        image: '/hero-slides/slide-4.webp',
         headline: 'Innovación sostenible para tu negocio',
         subtitle: 'Materiales eco-amigables y procesos responsables con el planeta.',
     },
     {
-        image: '/hero-slides/slide-5.png',
+        image: '/hero-slides/slide-5.webp',
         headline: 'Tu marca merece un escenario extraordinario',
         subtitle: 'Diseño modular y personalizado para ferias, exposiciones y eventos corporativos.',
     },
     {
-        image: '/hero-slides/slide-6.png',
+        image: '/hero-slides/slide-6.webp',
         headline: 'Creamos el espacio perfecto para tu visión',
         subtitle: 'Del concepto a la realidad: diseño, fabricación e instalación integral.',
     },
