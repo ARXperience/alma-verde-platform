@@ -7,7 +7,7 @@ const services = [
         category: 'Espacios con identidad',
         description: 'Escenografías, atmósferas y detalles que transforman un lugar en una experiencia.',
         image: '/hero-slides/slide-4.webp',
-        href: '/cotizar',
+        href: '/servicios#decoracion',
         className: 'lg:col-span-7 lg:row-span-2 lg:min-h-[640px]',
         featured: true,
     },
