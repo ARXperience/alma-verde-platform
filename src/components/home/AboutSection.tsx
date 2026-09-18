@@ -1,40 +1,77 @@
+import Image from 'next/image'
+
+const principles = [
+    {
+        number: '01',
+        title: 'Diseño con intención',
+        description: 'Cada decisión equilibra estética, función y conexión con la audiencia.',
+    },
+    {
+        number: '02',
+        title: 'Precisión en cada detalle',
+        description: 'Del primer trazo al montaje final, cuidamos materiales, acabados y ejecución.',
+    },
+    {
+        number: '03',
+        title: 'Impacto más consciente',
+        description: 'Creamos experiencias memorables con soluciones modulares y responsables.',
+    },
+]
+
 export function AboutSection() {
     return (
-        <section className="py-24 px-6 lg:px-20 grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-                <h3 className="text-[#13ec5b] font-bold tracking-widest uppercase text-sm mb-4">Sobre Nosotros</h3>
-                <h2 className="text-4xl lg:text-5xl font-black mb-8 leading-tight font-display">
-                    Estudio creativo de espacios efímeros.
-                </h2>
-                <p className="text-[#61896f] text-lg leading-relaxed mb-6">
-                    En Alma Verde Diseño, fusionamos la arquitectura contemporánea con estrategias de marketing espacial. Nuestro enfoque premium se centra en la excelencia técnica y la sostenibilidad creativa.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-                    <div className="flex gap-4 p-4 rounded-xl border border-slate-200 dark:border-white/10 hover:border-[#13ec5b] transition-colors">
-                        <span className="material-symbols-outlined text-[#13ec5b] text-3xl">workspace_premium</span>
-                        <div>
-                            <h4 className="font-bold">Calidad</h4>
-                            <p className="text-sm text-[#61896f]">Acabados de alta gama y atención meticulosa al detalle.</p>
-                        </div>
+        <section className="overflow-hidden bg-[#f6f8f6] px-5 py-24 text-[#0d150f] sm:px-8 lg:px-12 lg:py-36 dark:bg-[#102216] dark:text-white">
+            <div className="mx-auto max-w-[1440px]">
+                <div className="grid items-end gap-8 lg:grid-cols-12 lg:gap-12">
+                    <div className="lg:col-span-8">
+                        <p className="mb-6 text-xs font-semibold uppercase tracking-[0.28em] text-[#138a42] dark:text-[#59e98a]">
+                            Sobre Alma Verde
+                        </p>
+                        <h2 className="max-w-5xl text-balance text-[clamp(3rem,6.4vw,6.75rem)] font-semibold leading-[0.94] tracking-[-0.06em]">
+                            Diseñamos lo que las marcas
+                            <span className="block text-[#5b7562] dark:text-[#8fb99a]">hacen sentir.</span>
+                        </h2>
                     </div>
-                    <div className="flex gap-4 p-4 rounded-xl border border-slate-200 dark:border-white/10 hover:border-[#13ec5b] transition-colors">
-                        <span className="material-symbols-outlined text-[#13ec5b] text-3xl">precision_manufacturing</span>
-                        <div>
-                            <h4 className="font-bold">Expertise</h4>
-                            <p className="text-sm text-[#61896f]">Años dominando entornos comerciales exigentes.</p>
-                        </div>
+
+                    <div className="lg:col-span-4 lg:pb-2">
+                        <p className="max-w-xl text-base leading-7 text-[#59635b] sm:text-lg sm:leading-8 dark:text-white/65">
+                            Unimos arquitectura, narrativa de marca y producción para convertir espacios temporales en experiencias que permanecen en la memoria.
+                        </p>
                     </div>
                 </div>
-            </div>
-            <div className="relative group">
-                <div className="absolute -inset-4 bg-[#13ec5b]/20 rounded-xl blur-2xl group-hover:bg-[#13ec5b]/30 transition-all" />
-                <div className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl">
-                    <div
-                        className="w-full h-full bg-cover bg-center"
-                        style={{
-                            backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuDhroRLbpEEpBdSLXiw4krR8XoqW0azkSv3FB1Rk8R0lTEAaXmtbBz2Q7PV-1V1jLr0IiC6wBGiiT4zSmv6QFBNJ5N_SG3zLP2R9r5s8wyjyyKnJo1xqZwgE-eZ7M-9txVj7mQzlziZulT0rrUJYcysY2aTNCLomETQspVrUR7S9sj58eXeyTuPAcnY7gsNc7aLZh7YIp6Ra0d1aTHXcP2FgGj1gtQ98v21j9AMmBz0GDSqEZe9OU3lQ7NV82mEfclyHnXaDjGl-AI')`
-                        }}
-                    />
+
+                <div className="relative mt-14 overflow-hidden rounded-[1.75rem] bg-[#e8ece7] sm:mt-20 sm:rounded-[2.5rem] lg:mt-24">
+                    <div className="relative aspect-[4/5] sm:aspect-[16/10] lg:aspect-[16/8.2]">
+                        <Image
+                            src="/about-alma-verde.webp"
+                            alt="Modelo arquitectónico sostenible desarrollado en el estudio de Alma Verde"
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1536px) 94vw, 1440px"
+                            className="object-cover object-center"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/35 to-transparent" />
+                        <p className="absolute bottom-6 left-6 max-w-[240px] text-sm font-medium leading-5 text-white sm:bottom-9 sm:left-9 sm:max-w-none sm:text-base">
+                            Ideas que se pueden tocar, recorrer y recordar.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="mt-12 grid gap-9 sm:mt-16 md:grid-cols-3 md:gap-8">
+                    {principles.map((principle) => (
+                        <article key={principle.number} className="border-t border-[#cfd7d0] pt-6 dark:border-white/15">
+                            <div className="flex items-baseline gap-4">
+                                <span className="text-xs font-semibold tabular-nums text-[#138a42] dark:text-[#59e98a]">
+                                    {principle.number}
+                                </span>
+                                <h3 className="text-xl font-semibold tracking-[-0.025em] sm:text-2xl">
+                                    {principle.title}
+                                </h3>
+                            </div>
+                            <p className="ml-9 mt-3 max-w-sm text-sm leading-6 text-[#647067] sm:text-base sm:leading-7 dark:text-white/55">
+                                {principle.description}
+                            </p>
+                        </article>
+                    ))}
                 </div>
             </div>
         </section>
