@@ -1,58 +1,128 @@
-'use client'
-
-import Link from "next/link"
+import Image from 'next/image'
+import Link from 'next/link'
 
 const services = [
     {
-        icon: 'architecture',
-        title: 'Stand Design',
-        description: 'Diseño arquitectónico innovador para ferias y exposiciones internacionales.',
+        title: 'Decoración y ambientación',
+        category: 'Espacios con identidad',
+        description: 'Escenografías, atmósferas y detalles que transforman un lugar en una experiencia.',
+        image: '/hero-slides/slide-4.webp',
+        href: '/cotizar',
+        className: 'lg:col-span-7 lg:row-span-2 lg:min-h-[640px]',
+        featured: true,
     },
     {
-        icon: 'chair',
-        title: 'Mobiliario Comercial',
-        description: 'Mobiliario a medida optimizado para el retail y la experiencia de usuario.',
+        title: 'Stands y exhibiciones',
+        category: 'Diseño · Producción',
+        description: 'Espacios de marca memorables para ferias y encuentros comerciales.',
+        image: '/hero-slides/slide-5.webp',
+        href: '/servicios/stands-ecologicos',
+        className: 'lg:col-span-5 lg:min-h-[304px]',
     },
     {
-        icon: 'rocket_launch',
-        title: 'Activaciones de Marca',
-        description: 'Experiencias inmersivas que conectan emocionalmente con el consumidor.',
+        title: 'Eventos y activaciones',
+        category: 'Experiencias en vivo',
+        description: 'Momentos diseñados para provocar conversación, conexión y recuerdo.',
+        image: '/hero-slides/slide-3.webp',
+        href: '/servicios/activaciones',
+        className: 'lg:col-span-5 lg:min-h-[304px]',
     },
     {
-        icon: 'event_seat',
-        title: 'Instalaciones para Eventos',
-        description: 'Montajes logísticos integrales para eventos corporativos y lanzamientos.',
+        title: 'Branding físico',
+        category: 'Identidad espacial',
+        description: 'La marca aplicada al entorno con consistencia y carácter.',
+        image: '/hero-slides/slide-2.webp',
+        href: '/servicios/produccion-grafica',
+        className: 'lg:col-span-4',
+    },
+    {
+        title: 'Mobiliario comercial',
+        category: 'Diseño a medida',
+        description: 'Piezas funcionales que elevan la experiencia del espacio.',
+        image: '/hero-slides/slide-1.webp',
+        href: '/servicios/mobiliario',
+        className: 'lg:col-span-4',
+    },
+    {
+        title: 'Montaje y producción',
+        category: 'Ejecución integral',
+        description: 'Coordinamos cada detalle para que la idea llegue impecable al espacio.',
+        image: '/hero-slides/slide-6.webp',
+        href: '/servicios/montaje',
+        className: 'lg:col-span-4',
     },
 ]
 
 export function Services() {
     return (
-        <section className="py-24 px-6 lg:px-20 bg-white/60 backdrop-blur-xl dark:bg-[#102216]/50" id="servicios">
-            <div className="text-center max-w-2xl mx-auto mb-16">
-                <h2 className="text-4xl font-black mb-4 font-display">Nuestros Servicios</h2>
-                <p className="text-[#61896f]">Soluciones integrales desde el concepto hasta la instalación final.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-                {services.map((service, index) => (
-                    <div
-                        key={index}
-                        className="p-8 rounded-2xl bg-[#f6f8f6] dark:bg-white/5 border border-transparent hover:border-[#13ec5b] transition-all group"
-                    >
-                        <span className="material-symbols-outlined text-4xl text-[#13ec5b] mb-6 block group-hover:scale-110 transition-transform">
-                            {service.icon}
-                        </span>
-                        <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-                        <p className="text-sm text-[#61896f] leading-relaxed">{service.description}</p>
+        <section id="servicios" className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36">
+            <div className="mx-auto max-w-[1440px]">
+                <div className="mb-14 grid items-end gap-8 lg:mb-20 lg:grid-cols-12">
+                    <div className="lg:col-span-8">
+                        <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#5cff8d]">
+                            Lo que hacemos
+                        </p>
+                        <h2 className="max-w-5xl text-balance text-[clamp(3rem,6vw,6.5rem)] font-semibold leading-[0.94] tracking-[-0.06em]">
+                            Ideas que se convierten en lugares.
+                        </h2>
                     </div>
-                ))}
-            </div>
-            <div className="text-center mt-12">
-                <Link
-                    href="/cotizar"
-                    className="inline-block bg-[#13ec5b] text-[#111813] px-8 py-4 rounded-lg font-bold text-base hover:scale-105 transition-transform shadow-lg shadow-[#13ec5b]/20"
-                >
-                    Cotizar tu proyecto
-                </Link>
+                    <div className="lg:col-span-4 lg:pb-2">
+                        <p className="max-w-xl text-base leading-7 text-white/60 sm:text-lg sm:leading-8">
+                            Diseñamos, producimos y montamos experiencias físicas que hacen visible la esencia de cada marca.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-12 lg:gap-6">
+                    {services.map((service) => (
+                        <Link
+                            key={service.title}
+                            href={service.href}
+                            className={`group relative min-h-[390px] overflow-hidden rounded-[1.75rem] bg-[#172019] sm:min-h-[440px] lg:min-h-[300px] ${service.className}`}
+                        >
+                            <Image
+                                src={service.image}
+                                alt={service.title}
+                                fill
+                                sizes={service.featured
+                                    ? '(max-width: 1024px) 100vw, 58vw'
+                                    : '(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 34vw'}
+                                className="object-cover object-center transition duration-700 ease-out group-hover:scale-[1.045]"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-black/10 transition-colors duration-500 group-hover:from-black/80" />
+
+                            <div className="absolute inset-x-0 top-0 flex items-center justify-between p-5 sm:p-7">
+                                <span className="rounded-full border border-white/20 bg-black/15 px-3.5 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-md sm:text-xs">
+                                    {service.category}
+                                </span>
+                                <span className="flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/15 text-lg backdrop-blur-md transition duration-300 group-hover:rotate-45 group-hover:bg-white group-hover:text-black" aria-hidden="true">
+                                    ↗
+                                </span>
+                            </div>
+
+                            <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
+                                <h3 className={`max-w-xl font-semibold leading-[1.02] tracking-[-0.045em] ${service.featured ? 'text-4xl sm:text-5xl lg:text-6xl' : 'text-3xl sm:text-4xl'}`}>
+                                    {service.title}
+                                </h3>
+                                <p className={`mt-4 max-w-lg text-sm leading-6 text-white/65 transition duration-500 sm:text-base sm:leading-7 ${service.featured ? 'opacity-100' : 'lg:translate-y-3 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100'}`}>
+                                    {service.description}
+                                </p>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+
+                <div className="mt-12 flex flex-col items-start justify-between gap-6 border-t border-white/15 pt-8 sm:flex-row sm:items-center">
+                    <p className="max-w-xl text-sm leading-6 text-white/50 sm:text-base">
+                        ¿Tienes una idea distinta? Construimos soluciones a la medida de cada proyecto.
+                    </p>
+                    <Link
+                        href="/cotizar"
+                        className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#5cff8d] px-7 py-3 text-sm font-semibold text-[#081109] transition duration-300 hover:-translate-y-0.5 hover:bg-white"
+                    >
+                        Crear un proyecto
+                    </Link>
+                </div>
             </div>
         </section>
     )
