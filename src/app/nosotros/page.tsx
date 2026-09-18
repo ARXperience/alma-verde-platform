@@ -1,163 +1,237 @@
-import { Header } from "@/components/layout/Header"
-import { Footer } from "@/components/layout/Footer"
-import Link from "next/link"
+import Image from 'next/image'
+import Link from 'next/link'
+import { Footer } from '@/components/layout/Footer'
+import { Header } from '@/components/layout/Header'
 
 export const metadata = {
-    title: "Nosotros | Alma Verde Diseño",
-    description: "Conoce al equipo detrás de Alma Verde. Arquitectura, marketing espacial y sostenibilidad en cada proyecto.",
+    title: 'Nosotros | Alma Verde Diseño',
+    description: 'Conoce la visión, el método y el oficio detrás de Alma Verde Diseño.',
 }
 
-const stats = [
-    { value: '150+', label: 'Proyectos Entregados', highlight: true },
-    { value: '12', label: 'Premios de Diseño', highlight: false },
-    { value: '08', label: 'Países Alcanzados', highlight: false },
-    { value: '100%', label: 'Enfoque Sostenible', highlight: true },
+const principles = [
+    {
+        number: '01',
+        title: 'Intención antes que forma',
+        description: 'Cada decisión parte de lo que la marca necesita comunicar y de lo que las personas deben sentir.',
+    },
+    {
+        number: '02',
+        title: 'Diseño que se puede construir',
+        description: 'La creatividad convive con presupuestos, tiempos, materiales y una ejecución técnicamente rigurosa.',
+    },
+    {
+        number: '03',
+        title: 'Impacto más consciente',
+        description: 'Buscamos resultados memorables con sistemas modulares, materiales durables y menos desperdicio.',
+    },
 ]
 
-const team = [
-    { name: 'Julian Velez', role: 'Arquitecto Jefe & Fundador', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuACM-b6Z2UxLCM35T2TvlYFgHMRfyD1DQSK4DHapnodp5RuVoBoHuDpKY7DrPMWKcVhkVmaeIv8wWwNUHnXGUTCByaRFgBWh5Plxl0IWP9NLa1XGVuCDiAVbReNxP_kVIKbaalqC1NIf4g_ovv0Xm_QCcBuR9MvkuCPrgw0rwN_geDHSMd-tXT4Wgjw4m0zSPOtLo3lLCegS817uirGrLp5pxQKiY7iJ4U76PjYfa9dm12eBSFqJVZaRk-rpgVoK1lCvN17FOKlLXk' },
-    { name: 'Sofia Martinez', role: 'Directora de Estrategia', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAirjuF9S2Jlm12o3Vkb-QB-_Rk5FePYATj01E84bB01I0SX6xLKAf-LIishrhJey3uXe2YqiLEa-6kC4l3V6lWzNYuSBYrDt8C3i-5H7EZDbFcGR-OhSI0u2lffz7j9YVQOZZourpqJxtWnzhGMkwz1K7N2XAUjs-fTfc-bnyLHOfqDNTvtL87lbxtDAyYroW-WkO1njRxVKlULCYzPKp_uobVQRaFpPSg5LFlYMn0fQfrDUjvf9HmIYHAkgN6HbH9trd-2FnVkR4' },
-    { name: 'Lucas Thorne', role: 'Consultor de Sostenibilidad', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDpwMkfKkh9ZqjsvLtqK0ZZVAucYWBP8Ovl_i_nGdbmNjHtpwoeHGwLkSHaYWFOK5BMEJxqBfNzjG-HN8X1ilZ1_pEDDfHe-OBzWUgn1mHDpe79SiD8QsFTbDiV5MXkFoeFKcGxztH0Tmktv5qhNK7ya9Rl5RgJ2fqqjE2xZe55iR21J3iBKLgZGK2kG7X2TL-UxTLUYvC7cQU1umHZ5LzzHJUjcJJYd2t9nSuP941RrhQK776Q5p1RPGylMSoAIA_N5vBtm8kjig8' },
-    { name: 'Elena Rivas', role: 'Diseñadora Principal', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCQR1RdVnGQRAW81IuN_yeLL1PrDwk8mPBhSxG00hUs3RQWM9nVH5KGeu7tmuRTsryK8Oti4K2KqrTexMem944a3bNmzRTcVeAzPC1Fzsgu_aRFra9H8TzofaovgDN2agsLmdXo7IfICPaXm46h8ubJjOzXTBB1hTihbjMvVBylHTWMka6yFdcApjmHCfKk2vQI7S2FoNveV4SZS9zV9OmM6WKW884v7x_DlNrL0IU0eKYyrzEfRyPWf5vG3X6YV4stZeMV_ZUeIzs' },
+const disciplines = [
+    {
+        number: '01',
+        title: 'Estrategia espacial',
+        description: 'Traducimos objetivos de negocio y comunicación en decisiones de recorrido, escala y experiencia.',
+    },
+    {
+        number: '02',
+        title: 'Diseño y visualización',
+        description: 'Exploramos conceptos, modelamos alternativas y hacemos visible el proyecto antes de producirlo.',
+    },
+    {
+        number: '03',
+        title: 'Producción y oficio',
+        description: 'Integramos materiales, gráfica, mobiliario y acabados bajo una misma dirección creativa.',
+    },
+    {
+        number: '04',
+        title: 'Montaje y operación',
+        description: 'Coordinamos logística, instalación y entrega para proteger la intención hasta el último detalle.',
+    },
 ]
 
-const capabilities = [
-    { icon: 'draw', title: 'Diseño a Medida', desc: 'Soluciones personalizadas para la identidad de cada marca.' },
-    { icon: 'precision_manufacturing', title: 'Excelencia Técnica', desc: 'Modelado de última generación y análisis estructural.' },
-    { icon: 'campaign', title: 'Integración de Marketing', desc: 'Cada decisión de diseño cumple un propósito comunicativo.' },
+const studioImages = [
+    {
+        image: '/service-furniture.webp',
+        title: 'Materia y proporción',
+        label: 'Diseño de producto',
+        className: 'lg:col-span-7 lg:row-span-2',
+    },
+    {
+        image: '/service-graphic-production.webp',
+        title: 'Identidad en el espacio',
+        label: 'Producción visual',
+        className: 'lg:col-span-5',
+    },
+    {
+        image: '/sustainable-materials.webp',
+        title: 'Decisiones responsables',
+        label: 'Materialidad',
+        className: 'lg:col-span-5',
+    },
 ]
 
 export default function NosotrosPage() {
     return (
-        <main className="min-h-screen bg-[#f6f8f6] dark:bg-[#102216] font-display">
+        <main className="min-h-screen bg-[#f3f5f2] font-display text-[#0c120d]">
             <Header />
 
-            {/* Hero — Video de fondo full-width */}
-            <section className="relative w-full min-h-[60vh] md:min-h-[70vh] flex items-end overflow-hidden">
-                <div className="absolute inset-0 z-0">
-                    <video
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover"
-                    >
-                        <source src="/almaverde.mp4" type="video/mp4" />
-                    </video>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#102216] via-[#102216]/50 to-transparent" />
-                </div>
-                <div className="relative z-10 w-full px-6 md:px-20 lg:px-40 pb-16 md:pb-24">
-                    <div className="max-w-[1200px] mx-auto">
-                        <span className="bg-[#13ec5b] text-[#102216] px-3 py-1 text-xs font-bold uppercase tracking-widest rounded mb-4 inline-block">Fundado en 2012</span>
-                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-tight">Elevando Espacios,<br />Definiendo Marcas.</h1>
-                    </div>
-                </div>
-            </section>
+            <section className="bg-[#090d0a] px-4 pb-5 pt-4 text-white sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+                <div className="relative mx-auto min-h-[760px] max-w-[1500px] overflow-hidden rounded-[1.75rem] bg-[#172019] sm:rounded-[2.5rem] lg:min-h-[860px]">
+                    <Image
+                        src="/about-studio-hero.webp"
+                        alt="Equipo de Alma Verde desarrollando una experiencia espacial"
+                        fill
+                        priority
+                        sizes="100vw"
+                        className="object-cover object-center"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-black/5" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10" />
 
-            {/* Contenido */}
-            <section className="px-6 md:px-20 lg:px-40 py-12 md:py-20">
-                <div className="max-w-[1200px] mx-auto">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-                        <div className="space-y-6">
-                            <h2 className="text-3xl font-bold tracking-tight">Precisión Arquitectónica + Marketing Estratégico</h2>
-                            <p className="text-lg text-[#61896f] leading-relaxed">
-                                En Alma Verde Diseño, creemos que un espacio es más que una estructura física — es una narrativa viva. Fundados con el principio de que la arquitectura debe ser tan funcional como comunicativa, cerramos la brecha entre la excelencia técnica y el storytelling de marca.
-                            </p>
-                            <p className="text-lg text-[#61896f] leading-relaxed">
-                                Nuestro equipo multidisciplinario combina el rigor de la ingeniería estructural con la creatividad del marketing de alto nivel para crear entornos que no solo se ven bien, sino que rinden excepcionalmente para los objetivos de negocio de nuestros clientes.
+                    <div className="relative flex min-h-[760px] flex-col justify-between p-6 sm:p-10 lg:min-h-[860px] lg:p-16">
+                        <div className="flex items-center justify-between gap-5">
+                            <span className="rounded-full border border-white/20 bg-black/15 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/85 backdrop-blur-md sm:text-xs">
+                                Estudio creativo colombiano
+                            </span>
+                            <span className="hidden text-xs font-medium uppercase tracking-[0.2em] text-white/50 sm:block">Alma Verde Diseño</span>
+                        </div>
+
+                        <div className="max-w-6xl pb-3">
+                            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#5cff8d]">Quiénes somos</p>
+                            <h1 className="text-balance text-[clamp(3.6rem,7.4vw,7.9rem)] font-semibold leading-[0.89] tracking-[-0.068em]">
+                                Pensamos con estrategia. Construimos con intención.
+                            </h1>
+                            <p className="mt-7 max-w-2xl text-base leading-7 text-white/68 sm:text-lg sm:leading-8 lg:text-xl">
+                                Somos un estudio que une diseño espacial, narrativa de marca y producción para crear experiencias que se recuerdan.
                             </p>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            {stats.map((stat) => (
-                                <div key={stat.label} className={`p-8 rounded-xl border ${stat.highlight ? 'bg-[#13ec5b]/10 border-[#13ec5b]/20' : 'bg-slate-200/30 dark:bg-slate-800/30 border-slate-200 dark:border-slate-800'}`}>
-                                    <div className={`text-4xl font-black mb-2 ${stat.highlight ? 'text-[#13ec5b]' : ''}`}>{stat.value}</div>
-                                    <div className="text-sm font-bold uppercase tracking-wide text-slate-500">{stat.label}</div>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* Workshop */}
-            <section className="bg-slate-100 dark:bg-slate-900/50 py-20 px-6 md:px-20 lg:px-40">
-                <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row gap-12 items-center">
-                    <div className="w-full md:w-1/2 relative">
-                        <div className="absolute -top-4 -left-4 w-24 h-24 bg-[#13ec5b]/20 rounded-full blur-2xl" />
-                        <img
-                            alt="El Taller"
-                            className="rounded-2xl shadow-2xl relative z-10 w-full"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPtwRXIfUNR54cvfejKJqtBIYpJrI8GEm8UfGJRa7G-vH1YuyivQPihMg79lYRInjLHEuJ_HNrvM5HEf5uedsQA3bxcYbyvdq-lwOJq-SWcPagysyk9sksk-zmUJUxUSifQPbabvIgYH5yG0UWye5vF-zSv6qTrp4Pm4MDczPhV42n8M4l3MsC9Xf4Rj8KxMfryEPiwe6F_z0FgYPS3Jfq1SUovinDhTzt0e3VpBxPs1iEgImx6z_5Zj3n20W_47CdmAPiY7esV_E"
-                        />
+            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+                <div className="mx-auto max-w-[1440px]">
+                    <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
+                        <div className="lg:col-span-8">
+                            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#168340]">Nuestro punto de vista</p>
+                            <h2 className="max-w-5xl text-balance text-[clamp(3rem,6vw,6.4rem)] font-semibold leading-[0.94] tracking-[-0.06em]">
+                                No diseñamos objetos aislados. Diseñamos lo que sucede alrededor de ellos.
+                            </h2>
+                        </div>
+                        <div className="space-y-6 text-base leading-7 text-[#657067] sm:text-lg sm:leading-8 lg:col-span-4 lg:pt-10">
+                            <p>
+                                Un espacio puede orientar una conversación, cambiar la forma en que se percibe una marca y convertir un encuentro breve en una experiencia significativa.
+                            </p>
+                            <p>
+                                Por eso trabajamos desde la estrategia hasta el montaje. La idea, el material y la ejecución forman parte de una misma historia.
+                            </p>
+                        </div>
                     </div>
-                    <div className="w-full md:w-1/2 space-y-6">
-                        <h3 className="text-sm font-bold text-[#13ec5b] uppercase tracking-[0.2em]">Nuestro Oficio</h3>
-                        <h2 className="text-4xl font-bold leading-tight">Experiencia en Cada Detalle</h2>
-                        <p className="text-[#61896f] italic font-medium border-l-4 border-[#13ec5b] pl-4 py-2">
-                            &quot;No solo diseñamos edificios; diseñamos experiencias que resuenan con el espíritu humano.&quot;
+
+                    <div className="relative mt-16 overflow-hidden rounded-[2rem] bg-[#dfe5df] sm:mt-24 lg:rounded-[3rem]">
+                        <div className="relative aspect-[4/5] sm:aspect-[16/10] lg:aspect-[16/8.2]">
+                            <Image
+                                src="/about-alma-verde.webp"
+                                alt="Modelo arquitectónico desarrollado en el estudio Alma Verde"
+                                fill
+                                sizes="(max-width: 1536px) 94vw, 1440px"
+                                className="object-cover object-center"
+                            />
+                            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" />
+                            <p className="absolute bottom-7 left-7 max-w-sm text-lg font-medium tracking-[-0.02em] text-white sm:bottom-10 sm:left-10 sm:text-2xl">
+                                Las mejores ideas se vuelven más claras cuando se pueden tocar.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-12 grid gap-9 md:grid-cols-3 md:gap-8 lg:mt-16">
+                        {principles.map((principle) => (
+                            <article key={principle.number} className="border-t border-[#cbd4cc] pt-6">
+                                <span className="text-xs font-semibold tabular-nums text-[#168340]">{principle.number}</span>
+                                <h3 className="mt-8 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">{principle.title}</h3>
+                                <p className="mt-4 text-sm leading-6 text-[#657067] sm:text-base sm:leading-7">{principle.description}</p>
+                            </article>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36">
+                <div className="mx-auto max-w-[1440px]">
+                    <div className="grid items-end gap-8 lg:grid-cols-12">
+                        <div className="lg:col-span-8">
+                            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#5cff8d]">Un equipo integrado</p>
+                            <h2 className="max-w-5xl text-balance text-[clamp(3rem,6vw,6.4rem)] font-semibold leading-[0.94] tracking-[-0.06em]">
+                                Distintas disciplinas. Una sola dirección.
+                            </h2>
+                        </div>
+                        <p className="max-w-xl text-base leading-7 text-white/55 sm:text-lg sm:leading-8 lg:col-span-4">
+                            La colaboración continua evita que la idea se diluya cuando pasa del concepto a la realidad.
                         </p>
-                        <div className="space-y-4 pt-4">
-                            {capabilities.map((cap) => (
-                                <div key={cap.icon} className="flex items-start gap-4">
-                                    <span className="material-symbols-outlined text-[#13ec5b] p-2 bg-[#13ec5b]/10 rounded-lg">{cap.icon}</span>
-                                    <div>
-                                        <h4 className="font-bold">{cap.title}</h4>
-                                        <p className="text-sm text-slate-500">{cap.desc}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                    </div>
+
+                    <div className="mt-16 grid border-y border-white/15 sm:grid-cols-2 lg:mt-24 lg:grid-cols-4">
+                        {disciplines.map((discipline, index) => (
+                            <article key={discipline.number} className={`min-h-[330px] py-8 sm:p-8 lg:min-h-[380px] ${index > 0 ? 'sm:border-l sm:border-white/15' : ''} ${index === 2 ? 'sm:border-l-0 lg:border-l' : ''} ${index > 1 ? 'border-t border-white/15 lg:border-t-0' : ''}`}>
+                                <span className="text-xs font-semibold tabular-nums text-[#5cff8d]">{discipline.number}</span>
+                                <h3 className="mt-16 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">{discipline.title}</h3>
+                                <p className="mt-4 text-sm leading-6 text-white/50 sm:text-base sm:leading-7">{discipline.description}</p>
+                            </article>
+                        ))}
                     </div>
                 </div>
             </section>
 
-            {/* Team */}
-            <section className="py-20 px-6 md:px-20 lg:px-40">
-                <div className="max-w-[1200px] mx-auto text-center mb-16">
-                    <h2 className="text-4xl font-bold mb-4">Conoce a los Visionarios</h2>
-                    <p className="text-slate-500 max-w-2xl mx-auto">Nuestro equipo es una mezcla diversa de arquitectos, estrategas de marca y especialistas ambientales trabajando en sinergia.</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-[1200px] mx-auto">
-                    {team.map((member) => (
-                        <div key={member.name} className="group">
-                            <div className="aspect-square rounded-xl overflow-hidden mb-4 relative">
-                                <img alt={member.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" src={member.img} />
-                                <div className="absolute inset-0 bg-[#13ec5b]/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </div>
-                            <h4 className="text-xl font-bold">{member.name}</h4>
-                            <p className="text-[#13ec5b] text-sm font-semibold">{member.role}</p>
+            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+                <div className="mx-auto max-w-[1440px]">
+                    <div className="mb-14 grid items-end gap-8 lg:mb-20 lg:grid-cols-12">
+                        <div className="lg:col-span-8">
+                            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#168340]">El estudio en acción</p>
+                            <h2 className="max-w-5xl text-balance text-[clamp(3rem,6vw,6.4rem)] font-semibold leading-[0.94] tracking-[-0.06em]">
+                                La idea también vive en los detalles.
+                            </h2>
                         </div>
-                    ))}
+                        <p className="max-w-xl text-base leading-7 text-[#657067] sm:text-lg sm:leading-8 lg:col-span-4">
+                            Materiales, proporciones, color y sistemas de montaje se prueban antes de llegar al espacio final.
+                        </p>
+                    </div>
+
+                    <div className="grid gap-5 lg:grid-cols-12 lg:grid-rows-2 lg:gap-6">
+                        {studioImages.map((item) => (
+                            <article key={item.title} className={`group relative min-h-[420px] overflow-hidden rounded-[1.75rem] bg-[#172019] sm:min-h-[500px] lg:min-h-[340px] ${item.className}`}>
+                                <Image
+                                    src={item.image}
+                                    alt={item.title}
+                                    fill
+                                    sizes="(max-width: 1024px) 100vw, 58vw"
+                                    className="object-cover object-center transition duration-700 group-hover:scale-[1.04]"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                                <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5cff8d] sm:text-xs">{item.label}</p>
+                                    <h3 className="mt-2 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">{item.title}</h3>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
                 </div>
             </section>
 
-            {/* Sustainability */}
-            <section className="bg-[#102216] text-white py-24 px-6 md:px-20 lg:px-40 relative overflow-hidden">
-                <div className="max-w-[1200px] mx-auto relative z-10 flex flex-col lg:flex-row gap-16 items-center">
-                    <div className="w-full lg:w-1/2 space-y-8">
-                        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-[#13ec5b]/30 bg-[#13ec5b]/10">
-                            <span className="material-symbols-outlined text-[#13ec5b] text-sm">eco</span>
-                            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#13ec5b]">Compromiso Sostenible</span>
-                        </div>
-                        <h2 className="text-5xl font-black leading-tight">Producción Sostenible para un Mañana más Verde</h2>
-                        <p className="text-slate-400 text-lg">
-                            Nuestra esencia &apos;Alma Verde&apos; se integra en cada fase de producción. Abastecemos localmente, minimizamos residuos mediante fabricación digital de precisión y priorizamos materiales con bajo impacto ambiental.
-                        </p>
-                        <ul className="space-y-4">
-                            {['Procesos de fabricación cero residuos', 'Fuentes de madera certificadas sostenibles', 'Soluciones arquitectónicas de energía pasiva'].map((item) => (
-                                <li key={item} className="flex items-center gap-4">
-                                    <span className="material-symbols-outlined text-[#13ec5b]">check_circle</span>
-                                    <span>{item}</span>
-                                </li>
-                            ))}
-                        </ul>
-                        <Link href="/contacto" className="inline-flex items-center gap-2 bg-[#13ec5b] text-[#102216] px-8 py-4 rounded-lg font-bold hover:scale-105 transition-transform">
-                            Contáctanos <span className="material-symbols-outlined">arrow_forward</span>
+            <section className="bg-[#dff7e5] px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+                <div className="mx-auto grid max-w-[1440px] gap-12 lg:grid-cols-12 lg:items-end">
+                    <div className="lg:col-span-8">
+                        <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#168340]">Construyamos algo con sentido</p>
+                        <h2 className="max-w-5xl text-balance text-[clamp(3rem,5.8vw,6.2rem)] font-semibold leading-[0.94] tracking-[-0.06em]">
+                            Una buena conversación es el inicio de un gran espacio.
+                        </h2>
+                    </div>
+                    <div className="flex flex-col gap-3 sm:flex-row lg:col-span-4 lg:flex-col">
+                        <Link href="/cotizar" className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#0d180f] px-8 py-4 text-sm font-semibold text-white transition hover:bg-[#24402b]">
+                            Empezar un proyecto
                         </Link>
-                    </div>
-                    <div className="w-full lg:w-1/2 grid grid-cols-2 gap-4">
-                        <img alt="Materiales Sostenibles" className="rounded-xl w-full h-64 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_6I_KmsKxR8j-BLJF2pzfKH6OucssdAYcB3vDrU26wHs5bIV8qrcUraErw0rL1D6YDzZPh7uNaeH7fJVJtA4cggqwPjqaPDHH70QoyuhyIkJG3Pr5AxssSGZnvxRIyCgsKE7t8BOtbOAsrem-qKadvMlICtP3Oqjc-6pRxlRDSDvg4H_QgiSBa28yyhjYWilLtirCRPreSF4d3Upt2TDWPz3_mLWjsaNR163JxgxS9TvV32oHFvSDlLtzd730zmacV75IrOudS1o" />
-                        <img alt="Energía Verde" className="rounded-xl w-full h-64 object-cover mt-8" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWfMcFjVlCpClMC0JzIisAhxdZjIgPTZ6hFJpt1OMXcg4_L6NHpcbkB9J8ZVUmE1-s_yZAcVA9RSTcsuCCp5PLMdEcTT1ZQ7arUeyzS9f1q12WshfSPe4DIqNlgiC3am9wn29cXPysUPejy8Wt2Yvns3ycY8AxSYmbybvHpI9u6fXdYQS62uXlFMcDy3aF0r8X1xnJF2DuadlcCTAb1wvJRkYK537tHLQ8_w3PAyMKFzPhHQCWNhEH_CrVDVJYE4uye80ltuyaVrE" />
+                        <Link href="/servicios" className="inline-flex min-h-14 items-center justify-center rounded-full border border-[#94b09b] px-8 py-4 text-sm font-semibold transition hover:bg-white/60">
+                            Conocer nuestros servicios
+                        </Link>
                     </div>
                 </div>
             </section>
