@@ -75,36 +75,21 @@ export default function NosotrosPage() {
         <main className="min-h-screen bg-[#f3f5f2] font-display text-[#0c120d]">
             <Header />
 
-            <section className="bg-[#090d0a] px-4 pb-5 pt-4 text-white sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
-                <div className="relative mx-auto min-h-[760px] max-w-[1500px] overflow-hidden rounded-[1.75rem] bg-[#172019] sm:rounded-[2.5rem] lg:min-h-[860px]">
-                    <Image
-                        src="/about-studio-hero.webp"
-                        alt="Equipo de Alma Verde desarrollando una experiencia espacial"
-                        fill
-                        priority
-                        sizes="100vw"
-                        className="object-cover object-center"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-black/5" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10" />
-
-                    <div className="relative flex min-h-[760px] flex-col justify-between p-6 sm:p-10 lg:min-h-[860px] lg:p-16">
-                        <div className="flex items-center justify-between gap-5">
-                            <span className="rounded-full border border-white/20 bg-black/15 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/85 backdrop-blur-md sm:text-xs">
-                                Estudio creativo colombiano
-                            </span>
-                            <span className="hidden text-xs font-medium uppercase tracking-[0.2em] text-white/50 sm:block">Alma Verde Diseño</span>
-                        </div>
-
-                        <div className="max-w-6xl pb-3">
-                            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#5cff8d]">Quiénes somos</p>
-                            <h1 className="text-balance text-[clamp(3.6rem,7.4vw,7.9rem)] font-semibold leading-[0.89] tracking-[-0.068em]">
-                                Pensamos con estrategia. Construimos con intención.
-                            </h1>
-                            <p className="mt-7 max-w-2xl text-base leading-7 text-white/68 sm:text-lg sm:leading-8 lg:text-xl">
-                                Somos un estudio que une diseño espacial, narrativa de marca y producción para crear experiencias que se recuerdan.
-                            </p>
-                        </div>
+            <section className="relative flex min-h-[60vh] w-full items-end overflow-hidden md:min-h-[70vh]">
+                <div className="absolute inset-0 z-0">
+                    <video autoPlay loop muted playsInline className="h-full w-full object-cover">
+                        <source src="/almaverde.mp4" type="video/mp4" />
+                    </video>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#102216] via-[#102216]/50 to-transparent" />
+                </div>
+                <div className="relative z-10 w-full px-6 pb-16 md:px-20 md:pb-24 lg:px-40">
+                    <div className="mx-auto max-w-[1200px]">
+                        <span className="mb-4 inline-block rounded bg-[#13ec5b] px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#102216]">
+                            Fundado en 2012
+                        </span>
+                        <h1 className="text-4xl font-black leading-tight text-white md:text-6xl lg:text-7xl">
+                            Elevando Espacios,<br />Definiendo Marcas.
+                        </h1>
                     </div>
                 </div>
             </section>
