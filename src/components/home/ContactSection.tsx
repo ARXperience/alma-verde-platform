@@ -44,7 +44,7 @@ export function ContactSection() {
     }
 
     return (
-        <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36" id="contacto">
+        <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36" id="contacto" data-assistant-section="contact">
             <div className="mx-auto grid max-w-[1440px] gap-14 lg:grid-cols-12 lg:gap-16">
                 <div className="flex flex-col justify-between lg:col-span-5">
                     <div>
@@ -69,7 +69,7 @@ export function ContactSection() {
                     </div>
                 </div>
 
-                <div className="rounded-[2rem] bg-[#f4f6f3] p-6 text-[#101510] sm:p-9 lg:col-span-7 lg:rounded-[2.5rem] lg:p-12">
+                <div className="rounded-[2rem] bg-[#f4f6f3] p-6 text-[#101510] sm:p-9 lg:col-span-7 lg:rounded-[2.5rem] lg:p-12" data-assistant-section="form">
                     <div className="mb-9 flex items-end justify-between gap-6">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#168340]">Brief inicial</p>

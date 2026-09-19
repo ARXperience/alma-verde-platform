@@ -8,6 +8,7 @@ export const metadata = {
 export default function MontajePage() {
     return (
         <ServiceDetailPage
+            assistantSection="montage"
             eyebrow="Ejecución integral"
             title="Todo en su lugar."
             accent="Todo a tiempo."

@@ -107,7 +107,7 @@ export function Portfolio() {
     const items = hasDynamicItems ? dynamicItems! : fallbackItems
 
     return (
-        <section className="bg-[#f3f5f2] px-5 py-24 text-[#0c120d] sm:px-8 lg:px-12 lg:py-36" id="proyectos">
+        <section className="bg-[#f3f5f2] px-5 py-24 text-[#0c120d] sm:px-8 lg:px-12 lg:py-36" id="proyectos" data-assistant-section="portfolio">
             <div className="mx-auto max-w-[1440px]">
                 <div className="mb-14 grid items-end gap-8 lg:mb-20 lg:grid-cols-12">
                     <div className="lg:col-span-8">

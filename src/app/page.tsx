@@ -7,7 +7,6 @@ import { Portfolio } from "@/components/home/Portfolio"
 import { ProcessSection } from "@/components/home/ProcessSection"
 import { SustainabilitySection } from "@/components/home/SustainabilitySection"
 import { ContactSection } from "@/components/home/ContactSection"
-import { ChatWidget } from "@/components/home/ChatWidget"
 import { AnimatedWaves } from "@/components/home/AnimatedWaves"
 
 export default function Home() {
@@ -22,7 +21,6 @@ export default function Home() {
       <ProcessSection />
       <SustainabilitySection />
       <ContactSection />
-      <ChatWidget />
       <Footer />
     </main>
   )

@@ -8,7 +8,7 @@ const principles = [
 
 export function SustainabilitySection() {
     return (
-        <section className="bg-[#dff7e5] px-5 py-24 text-[#0b150d] sm:px-8 lg:px-12 lg:py-36">
+        <section className="bg-[#dff7e5] px-5 py-24 text-[#0b150d] sm:px-8 lg:px-12 lg:py-36" data-assistant-section="sustainability">
             <div className="mx-auto max-w-[1440px]">
                 <div className="grid items-end gap-8 lg:grid-cols-12">
                     <div className="lg:col-span-9">
@@ -22,7 +22,7 @@ export function SustainabilitySection() {
                     </p>
                 </div>
 
-                <div className="mt-16 grid overflow-hidden rounded-[2rem] bg-[#f6fbf7] lg:mt-24 lg:grid-cols-12 lg:rounded-[3rem]">
+                <div className="mt-16 grid overflow-hidden rounded-[2rem] bg-[#f6fbf7] lg:mt-24 lg:grid-cols-12 lg:rounded-[3rem]" data-assistant-section="materials">
                     <div className="relative min-h-[430px] lg:col-span-7 lg:min-h-[720px]">
                         <Image
                             src="/sustainable-materials.webp"

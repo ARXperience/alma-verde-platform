@@ -17,6 +17,7 @@ const services = [
         description: 'Diseño, fabricación y montaje de espacios memorables para ferias y encuentros comerciales.',
         image: '/hero-slides/slide-5.webp',
         href: '/servicios/stands-ecologicos',
+        assistantSection: 'stands',
         className: 'lg:col-span-8',
     },
     {
@@ -27,6 +28,7 @@ const services = [
         description: 'Escenografía, iluminación, styling y detalles que transforman la percepción del espacio.',
         image: '/hero-slides/slide-4.webp',
         href: '/cotizar?servicio=decoracion',
+        assistantSection: 'decoration',
         className: 'lg:col-span-4',
     },
     {
@@ -37,6 +39,7 @@ const services = [
         description: 'Lanzamientos, pop-ups e instalaciones creadas para atraer, conectar y generar conversación.',
         image: '/hero-slides/slide-3.webp',
         href: '/servicios/activaciones',
+        assistantSection: 'activations',
         className: 'lg:col-span-4',
     },
     {
@@ -47,6 +50,7 @@ const services = [
         description: 'Impresión, señalética, vinilos, material POP y aplicaciones de identidad a cualquier escala.',
         image: '/service-graphic-production.webp',
         href: '/servicios/produccion-grafica',
+        assistantSection: 'branding',
         className: 'lg:col-span-8',
     },
     {
@@ -57,6 +61,7 @@ const services = [
         description: 'Mostradores, exhibidores, módulos y piezas que combinan función, materialidad y marca.',
         image: '/service-furniture.webp',
         href: '/servicios/mobiliario',
+        assistantSection: 'furniture',
         className: 'lg:col-span-4',
     },
     {
@@ -67,6 +72,7 @@ const services = [
         description: 'Coordinación técnica, transporte, instalación, supervisión y desmontaje en sitio.',
         image: '/hero-slides/slide-6.webp',
         href: '/servicios/montaje',
+        assistantSection: 'montage',
         className: 'lg:col-span-4',
     },
     {
@@ -77,6 +83,7 @@ const services = [
         description: 'Mobiliario, iluminación, estructuras y recursos técnicos listos para complementar cada evento.',
         image: '/service-equipment-rental.webp',
         href: '/cotizar?servicio=alquiler',
+        assistantSection: 'production',
         className: 'lg:col-span-4',
     },
 ]
@@ -109,7 +116,7 @@ export default function ServiciosPage() {
         <main className="min-h-screen bg-[#f3f5f2] font-display text-[#0c120d]">
             <Header />
 
-            <section className="bg-[#090d0a] px-4 pb-5 pt-4 text-white sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+            <section className="bg-[#090d0a] px-4 pb-5 pt-4 text-white sm:px-6 sm:pb-6 lg:px-8 lg:pb-8" data-assistant-section="services">
                 <div className="relative mx-auto min-h-[740px] max-w-[1500px] overflow-hidden rounded-[1.75rem] bg-[#172019] sm:rounded-[2.5rem] lg:min-h-[820px]">
                     <Image
                         src="/hero-slides/slide-1.webp"
@@ -149,7 +156,7 @@ export default function ServiciosPage() {
                 </div>
             </section>
 
-            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36" data-assistant-section="services">
                 <div className="mx-auto max-w-[1440px]">
                     <div className="mb-14 grid items-end gap-8 lg:mb-20 lg:grid-cols-12">
                         <div className="lg:col-span-8">
@@ -169,6 +176,7 @@ export default function ServiciosPage() {
                                 key={service.id}
                                 id={service.id}
                                 href={service.href}
+                                data-assistant-section={service.assistantSection}
                                 className={`group relative min-h-[430px] scroll-mt-28 overflow-hidden rounded-[1.75rem] bg-[#172019] sm:min-h-[500px] lg:min-h-[460px] ${service.className}`}
                             >
                                 <Image
@@ -206,7 +214,7 @@ export default function ServiciosPage() {
                 </div>
             </section>
 
-            <section className="bg-[#dff7e5] px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+            <section className="bg-[#dff7e5] px-5 py-24 sm:px-8 lg:px-12 lg:py-36" data-assistant-section="production">
                 <div className="mx-auto max-w-[1440px]">
                     <div className="grid items-end gap-8 lg:grid-cols-12">
                         <div className="lg:col-span-8">
@@ -232,7 +240,7 @@ export default function ServiciosPage() {
                 </div>
             </section>
 
-            <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-32">
+            <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-32" data-assistant-section="cta">
                 <div className="mx-auto flex max-w-[1440px] flex-col items-start justify-between gap-10 lg:flex-row lg:items-end">
                     <div>
                         <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#5cff8d]">Proyecto a medida</p>

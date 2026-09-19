@@ -8,6 +8,7 @@ export const metadata = {
 export default function MobiliarioPage() {
     return (
         <ServiceDetailPage
+            assistantSection="furniture"
             eyebrow="Diseño y fabricación"
             title="Objetos que organizan."
             accent="Piezas que representan."

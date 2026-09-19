@@ -1,0 +1,377 @@
+.assistant {
+    --alma-scale: 1;
+    --alma-offset-y: 0px;
+    position: fixed;
+    z-index: 48;
+    bottom: 18px;
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    width: min(410px, calc(100vw - 32px));
+    pointer-events: none;
+    transition: left 700ms cubic-bezier(.22, 1, .36, 1), right 700ms cubic-bezier(.22, 1, .36, 1), transform 700ms cubic-bezier(.22, 1, .36, 1);
+    transform: translateY(var(--alma-offset-y));
+}
+
+.position_right {
+    right: clamp(20px, 4vw, 72px);
+    justify-content: flex-end;
+}
+
+.position_left {
+    left: clamp(20px, 4vw, 72px);
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.character {
+    position: relative;
+    width: 132px;
+    height: 198px;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    pointer-events: auto;
+    filter: drop-shadow(0 18px 18px rgb(7 19 10 / 20%));
+    transform: scale(var(--alma-scale));
+    transform-origin: bottom center;
+    transition: transform 500ms cubic-bezier(.22, 1, .36, 1), filter 300ms ease;
+}
+
+.character:hover {
+    transform: scale(calc(var(--alma-scale) * 1.035)) translateY(-3px);
+    filter: drop-shadow(0 22px 22px rgb(7 19 10 / 24%));
+}
+
+.character:focus-visible,
+.restoreButton:focus-visible,
+.bubble button:focus-visible,
+.menu button:focus-visible {
+    outline: 3px solid #17b652;
+    outline-offset: 4px;
+}
+
+.characterStage {
+    position: absolute;
+    inset: 0;
+    animation: alma-breathe 4.8s ease-in-out infinite;
+}
+
+.bodyLayer {
+    object-fit: contain;
+}
+
+.headLayer {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 35%;
+    transition: transform 700ms cubic-bezier(.22, 1, .36, 1);
+    animation: alma-look 8s ease-in-out infinite;
+}
+
+.headLayer img {
+    object-fit: contain;
+}
+
+.mouth {
+    position: absolute;
+    top: 29.8%;
+    left: 50.1%;
+    width: 8.5%;
+    height: 1.8%;
+    border-radius: 999px;
+    background: #171710;
+    opacity: 0;
+    transform: translate(-50%, -50%) scaleY(.25);
+    transform-origin: center top;
+    transition: opacity 90ms linear, transform 110ms ease;
+}
+
+.mouthOpen {
+    opacity: .96;
+    transform: translate(-50%, -15%) scaleY(1.7);
+}
+
+.pose_wave .headLayer { transform: rotate(-2deg) translateY(-1px); }
+.pose_point .headLayer { transform: rotate(3deg) translateX(1px); }
+.pose_think .headLayer { transform: rotate(-6deg) translate(-1px, 1px); }
+.pose_build .headLayer { transform: rotate(2deg) translateY(1px); }
+.pose_plant .headLayer { transform: rotate(-3deg) translateY(-2px); }
+.pose_draw .headLayer { transform: rotate(5deg) translateY(1px); }
+.pose_sit .headLayer { transform: rotate(-3deg); }
+.pose_walk .characterStage { animation: alma-walk 2.8s ease-in-out infinite; }
+.pose_celebrate .characterStage { animation: alma-celebrate 3.2s ease-in-out infinite; }
+
+.bubble {
+    position: relative;
+    width: min(288px, calc(100vw - 172px));
+    margin-bottom: 95px;
+    border: 1px solid rgb(19 42 25 / 10%);
+    border-radius: 20px 20px 6px 20px;
+    background: rgb(255 253 247 / 96%);
+    box-shadow: 0 18px 50px rgb(6 22 11 / 15%);
+    color: #162019;
+    opacity: 0;
+    padding: 15px 16px 16px;
+    pointer-events: none;
+    transform: translateY(8px) scale(.98);
+    transform-origin: bottom right;
+    transition: opacity 240ms ease, transform 320ms cubic-bezier(.22, 1, .36, 1);
+    backdrop-filter: blur(12px);
+}
+
+.position_left .bubble {
+    border-radius: 20px 20px 20px 6px;
+    transform-origin: bottom left;
+}
+
+.bubbleVisible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.bubble::after {
+    content: '';
+    position: absolute;
+    right: -9px;
+    bottom: 14px;
+    width: 18px;
+    height: 18px;
+    border-right: 1px solid rgb(19 42 25 / 10%);
+    border-bottom: 1px solid rgb(19 42 25 / 10%);
+    background: #fffdf7;
+    transform: rotate(-45deg);
+}
+
+.position_left .bubble::after {
+    right: auto;
+    left: -9px;
+    transform: rotate(135deg);
+}
+
+.bubbleHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.bubbleHeader > span,
+.menuHeader span {
+    color: #168340;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+
+.bubbleActions {
+    display: flex;
+    gap: 2px;
+}
+
+.bubble button,
+.menuHeader button {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #536058;
+    cursor: pointer;
+}
+
+.bubble button:hover,
+.menuHeader button:hover {
+    background: #e7f3e9;
+    color: #0e6c31;
+}
+
+.bubble p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.menu {
+    position: absolute;
+    right: 104px;
+    bottom: 34px;
+    width: min(320px, calc(100vw - 158px));
+    overflow: hidden;
+    border: 1px solid rgb(19 42 25 / 11%);
+    border-radius: 22px;
+    background: rgb(255 253 247 / 98%);
+    box-shadow: 0 22px 60px rgb(6 22 11 / 19%);
+    color: #142018;
+    pointer-events: auto;
+    animation: alma-menu-in 260ms cubic-bezier(.22, 1, .36, 1) both;
+    backdrop-filter: blur(14px);
+}
+
+.position_left .menu {
+    right: auto;
+    left: 104px;
+}
+
+.menuHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 18px 14px;
+}
+
+.menuHeader h2 {
+    margin: 4px 0 0;
+    font-size: 17px;
+    line-height: 1.2;
+    letter-spacing: -.025em;
+}
+
+.menuOptions {
+    padding: 0 8px 8px;
+}
+
+.menuOptions button {
+    display: flex;
+    width: 100%;
+    min-height: 42px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 0;
+    border-top: 1px solid #e3e8e2;
+    background: transparent;
+    color: #253128;
+    cursor: pointer;
+    padding: 10px;
+    text-align: left;
+    font: inherit;
+    font-size: 12px;
+    transition: color 180ms ease, padding 180ms ease;
+}
+
+.menuOptions button:hover {
+    color: #0b8535;
+    padding-left: 14px;
+}
+
+.restoreButton {
+    position: fixed;
+    z-index: 48;
+    right: 22px;
+    bottom: 22px;
+    display: flex;
+    width: 48px;
+    height: 48px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(17 73 33 / 12%);
+    border-radius: 999px;
+    background: #fffdf7;
+    box-shadow: 0 12px 30px rgb(6 22 11 / 16%);
+    color: #14813a;
+    cursor: pointer;
+}
+
+@keyframes alma-breathe {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-2px) scale(1.006); }
+}
+
+@keyframes alma-look {
+    0%, 34%, 100% { margin-left: 0; }
+    38%, 46% { margin-left: 1px; }
+}
+
+@keyframes alma-walk {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    30% { transform: translateX(-3px) rotate(-1deg); }
+    65% { transform: translateX(3px) rotate(1deg); }
+}
+
+@keyframes alma-celebrate {
+    0%, 76%, 100% { transform: translateY(0); }
+    84% { transform: translateY(-5px); }
+    92% { transform: translateY(-2px); }
+}
+
+@keyframes alma-menu-in {
+    from { opacity: 0; transform: translateY(8px) scale(.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 767px) {
+    .assistant,
+    .position_left,
+    .position_right {
+        right: 10px;
+        left: auto;
+        bottom: max(8px, env(safe-area-inset-bottom));
+        width: calc(100vw - 20px);
+        flex-direction: row;
+        justify-content: flex-end;
+        gap: 6px;
+        transform: none;
+    }
+
+    .character {
+        width: 82px;
+        height: 123px;
+    }
+
+    .bubble,
+    .position_left .bubble {
+        position: absolute;
+        right: 0;
+        bottom: 128px;
+        width: min(286px, calc(100vw - 32px));
+        margin: 0;
+        border-radius: 18px 18px 5px 18px;
+        transform-origin: bottom right;
+    }
+
+    .bubble::after,
+    .position_left .bubble::after {
+        right: 24px;
+        left: auto;
+        bottom: -8px;
+        transform: rotate(45deg);
+    }
+
+    .menu,
+    .position_left .menu {
+        right: 0;
+        left: auto;
+        bottom: 128px;
+        width: min(320px, calc(100vw - 20px));
+    }
+
+    .restoreButton {
+        right: 12px;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .assistant,
+    .character,
+    .characterStage,
+    .headLayer,
+    .bubble,
+    .menu {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+

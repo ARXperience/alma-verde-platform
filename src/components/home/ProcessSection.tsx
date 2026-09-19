@@ -27,7 +27,7 @@ const steps = [
 
 export function ProcessSection() {
     return (
-        <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36" id="proceso">
+        <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36" id="proceso" data-assistant-section="process">
             <div className="mx-auto max-w-[1440px]">
                 <div className="grid items-end gap-8 lg:grid-cols-12">
                     <div className="lg:col-span-8">

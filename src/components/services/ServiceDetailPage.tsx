@@ -15,6 +15,7 @@ type GalleryItem = {
 }
 
 type ServiceDetailPageProps = {
+    assistantSection: 'stands' | 'activations' | 'branding' | 'furniture' | 'montage'
     eyebrow: string
     title: string
     accent: string
@@ -32,6 +33,7 @@ type ServiceDetailPageProps = {
 }
 
 export function ServiceDetailPage({
+    assistantSection,
     eyebrow,
     title,
     accent,
@@ -51,7 +53,7 @@ export function ServiceDetailPage({
         <main className="min-h-screen bg-[#f3f5f2] font-display text-[#101510]">
             <Header />
 
-            <section className="bg-[#090d0a] px-4 pb-5 pt-4 text-white sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+            <section className="bg-[#090d0a] px-4 pb-5 pt-4 text-white sm:px-6 sm:pb-6 lg:px-8 lg:pb-8" data-assistant-section={assistantSection}>
                 <div className="relative mx-auto min-h-[720px] max-w-[1500px] overflow-hidden rounded-[1.75rem] bg-[#172019] sm:rounded-[2.5rem] lg:min-h-[820px]">
                     <Image
                         src={heroImage}
@@ -101,7 +103,7 @@ export function ServiceDetailPage({
                 </div>
             </section>
 
-            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36" data-assistant-section="materials">
                 <div className="mx-auto max-w-[1440px]">
                     <div className="grid items-end gap-8 lg:grid-cols-12">
                         <div className="lg:col-span-8">
@@ -127,7 +129,7 @@ export function ServiceDetailPage({
                 </div>
             </section>
 
-            <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36">
+            <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36" data-assistant-section="portfolio">
                 <div className="mx-auto max-w-[1440px]">
                     <div className="mb-14 grid items-end gap-8 lg:mb-20 lg:grid-cols-12">
                         <h2 className="max-w-4xl text-balance text-[clamp(2.8rem,5.3vw,5.6rem)] font-semibold leading-[0.96] tracking-[-0.055em] lg:col-span-8">
@@ -164,7 +166,7 @@ export function ServiceDetailPage({
                 </div>
             </section>
 
-            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36" data-assistant-section="cta">
                 <div className="mx-auto grid max-w-[1440px] overflow-hidden rounded-[2rem] bg-[#dff7e5] lg:grid-cols-12 lg:rounded-[3rem]">
                     <div className="p-8 sm:p-12 lg:col-span-8 lg:p-16">
                         <p className="mb-5 text-xs font-semibold uppercase tracking-[0.24em] text-[#168340]">Hagámoslo realidad</p>

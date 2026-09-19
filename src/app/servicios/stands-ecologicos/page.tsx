@@ -8,6 +8,7 @@ export const metadata = {
 export default function StandsEcologicosPage() {
     return (
         <ServiceDetailPage
+            assistantSection="stands"
             eyebrow="Arquitectura sostenible"
             title="Stands que hacen"
             accent="visible tu marca."

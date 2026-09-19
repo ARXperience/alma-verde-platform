@@ -20,7 +20,7 @@ const principles = [
 
 export function AboutSection() {
     return (
-        <section className="overflow-hidden bg-[#f6f8f6] px-5 py-24 text-[#0d150f] sm:px-8 lg:px-12 lg:py-36 dark:bg-[#102216] dark:text-white">
+        <section className="overflow-hidden bg-[#f6f8f6] px-5 py-24 text-[#0d150f] sm:px-8 lg:px-12 lg:py-36 dark:bg-[#102216] dark:text-white" data-assistant-section="about">
             <div className="mx-auto max-w-[1440px]">
                 <div className="grid items-end gap-8 lg:grid-cols-12 lg:gap-12">
                     <div className="lg:col-span-8">

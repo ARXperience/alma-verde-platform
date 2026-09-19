@@ -8,6 +8,7 @@ export const metadata = {
 export default function ActivacionesPage() {
     return (
         <ServiceDetailPage
+            assistantSection="activations"
             eyebrow="Experiencias de marca"
             title="Momentos que atraen."
             accent="Ideas que permanecen."

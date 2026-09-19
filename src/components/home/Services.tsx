@@ -8,6 +8,7 @@ const services = [
         description: 'Escenografías, atmósferas y detalles que transforman un lugar en una experiencia.',
         image: '/hero-slides/slide-4.webp',
         href: '/servicios#decoracion',
+        assistantSection: 'decoration',
         className: 'lg:col-span-7 lg:row-span-2 lg:min-h-[640px]',
         featured: true,
     },
@@ -17,6 +18,7 @@ const services = [
         description: 'Espacios de marca memorables para ferias y encuentros comerciales.',
         image: '/hero-slides/slide-5.webp',
         href: '/servicios/stands-ecologicos',
+        assistantSection: 'stands',
         className: 'lg:col-span-5 lg:min-h-[304px]',
     },
     {
@@ -25,6 +27,7 @@ const services = [
         description: 'Momentos diseñados para provocar conversación, conexión y recuerdo.',
         image: '/hero-slides/slide-3.webp',
         href: '/servicios/activaciones',
+        assistantSection: 'activations',
         className: 'lg:col-span-5 lg:min-h-[304px]',
     },
     {
@@ -33,6 +36,7 @@ const services = [
         description: 'La marca aplicada al entorno con consistencia y carácter.',
         image: '/hero-slides/slide-2.webp',
         href: '/servicios/produccion-grafica',
+        assistantSection: 'branding',
         className: 'lg:col-span-4',
     },
     {
@@ -41,6 +45,7 @@ const services = [
         description: 'Piezas funcionales que elevan la experiencia del espacio.',
         image: '/hero-slides/slide-1.webp',
         href: '/servicios/mobiliario',
+        assistantSection: 'furniture',
         className: 'lg:col-span-4',
     },
     {
@@ -49,13 +54,14 @@ const services = [
         description: 'Coordinamos cada detalle para que la idea llegue impecable al espacio.',
         image: '/hero-slides/slide-6.webp',
         href: '/servicios/montaje',
+        assistantSection: 'montage',
         className: 'lg:col-span-4',
     },
 ]
 
 export function Services() {
     return (
-        <section id="servicios" className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36">
+        <section id="servicios" className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36" data-assistant-section="services">
             <div className="mx-auto max-w-[1440px]">
                 <div className="mb-14 grid items-end gap-8 lg:mb-20 lg:grid-cols-12">
                     <div className="lg:col-span-8">
@@ -78,6 +84,7 @@ export function Services() {
                         <Link
                             key={service.title}
                             href={service.href}
+                            data-assistant-section={service.assistantSection}
                             className={`group relative min-h-[390px] overflow-hidden rounded-[1.75rem] bg-[#172019] sm:min-h-[440px] lg:min-h-[300px] ${service.className}`}
                         >
                             <Image

@@ -54,7 +54,7 @@ export default function PortafolioPage() {
             <Header />
             <div className="max-w-7xl mx-auto px-6 lg:px-10 py-12 md:py-20">
                 {/* Hero */}
-                <div className="mb-16 max-w-3xl">
+                <div className="mb-16 max-w-3xl" data-assistant-section="portfolio">
                     <h1 className="text-5xl md:text-6xl font-black mb-6 leading-tight tracking-tighter">
                         Todos los <span className="text-[#13ec5b] italic">proyectos</span>
                     </h1>
@@ -81,8 +81,9 @@ export default function PortafolioPage() {
                 </div>
 
                 {/* Grid */}
+                <div data-assistant-section="portfolio">
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" data-assistant-section="portfolio">
                         {[...Array(6)].map((_, i) => (
                             <div key={i} className="aspect-[4/5] rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
                         ))}
@@ -119,6 +120,7 @@ export default function PortafolioPage() {
                         ))}
                     </div>
                 )}
+                </div>
             </div>
             <Footer />
         </main>

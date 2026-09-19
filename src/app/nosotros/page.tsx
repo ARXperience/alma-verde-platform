@@ -75,7 +75,7 @@ export default function NosotrosPage() {
         <main className="min-h-screen bg-[#f3f5f2] font-display text-[#0c120d]">
             <Header />
 
-            <section className="relative flex min-h-[60vh] w-full items-end overflow-hidden md:min-h-[70vh]">
+            <section className="relative flex min-h-[60vh] w-full items-end overflow-hidden md:min-h-[70vh]" data-assistant-section="hero">
                 <div className="absolute inset-0 z-0">
                     <video autoPlay loop muted playsInline className="h-full w-full object-cover">
                         <source src="/almaverde.mp4" type="video/mp4" />
@@ -94,7 +94,7 @@ export default function NosotrosPage() {
                 </div>
             </section>
 
-            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36" data-assistant-section="about">
                 <div className="mx-auto max-w-[1440px]">
                     <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
                         <div className="lg:col-span-8">
@@ -141,7 +141,7 @@ export default function NosotrosPage() {
                 </div>
             </section>
 
-            <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36">
+            <section className="bg-[#090d0a] px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-36" data-assistant-section="philosophy">
                 <div className="mx-auto max-w-[1440px]">
                     <div className="grid items-end gap-8 lg:grid-cols-12">
                         <div className="lg:col-span-8">
@@ -167,7 +167,7 @@ export default function NosotrosPage() {
                 </div>
             </section>
 
-            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+            <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-36" data-assistant-section="team">
                 <div className="mx-auto max-w-[1440px]">
                     <div className="mb-14 grid items-end gap-8 lg:mb-20 lg:grid-cols-12">
                         <div className="lg:col-span-8">
@@ -202,7 +202,7 @@ export default function NosotrosPage() {
                 </div>
             </section>
 
-            <section className="bg-[#dff7e5] px-5 py-24 sm:px-8 lg:px-12 lg:py-36">
+            <section className="bg-[#dff7e5] px-5 py-24 sm:px-8 lg:px-12 lg:py-36" data-assistant-section="cta">
                 <div className="mx-auto grid max-w-[1440px] gap-12 lg:grid-cols-12 lg:items-end">
                     <div className="lg:col-span-8">
                         <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#168340]">Construyamos algo con sentido</p>

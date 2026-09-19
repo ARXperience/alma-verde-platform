@@ -58,7 +58,7 @@ export function Hero() {
     }, [nextSlide])
 
     return (
-        <section className="relative h-[85vh] w-full overflow-hidden" id="hero">
+        <section className="relative h-[85vh] w-full overflow-hidden" id="hero" data-assistant-section="hero">
             {/* Slides */}
             {heroSlides.map((slide, index) => (
                 <div

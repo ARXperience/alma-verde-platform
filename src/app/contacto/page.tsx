@@ -24,7 +24,7 @@ export default function ContactoPage() {
     return (
         <main className="min-h-screen bg-[#f6f8f6] dark:bg-[#102216] font-display">
             <Header />
-            <section className="mx-auto max-w-7xl px-6 py-16 md:px-10 lg:py-24">
+            <section className="mx-auto max-w-7xl px-6 py-16 md:px-10 lg:py-24" data-assistant-section="contact">
                 <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
                     {/* Left */}
                     <div>
@@ -52,7 +52,7 @@ export default function ContactoPage() {
                     </div>
 
                     {/* Right - Form */}
-                    <div className="bg-white dark:bg-slate-900/50 p-8 md:p-10 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
+                    <div className="bg-white dark:bg-slate-900/50 p-8 md:p-10 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl" data-assistant-section="form">
                         <h2 className="text-2xl font-bold mb-8">Solicitar información</h2>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

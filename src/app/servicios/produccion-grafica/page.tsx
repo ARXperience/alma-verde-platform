@@ -8,6 +8,7 @@ export const metadata = {
 export default function ProduccionGraficaPage() {
     return (
         <ServiceDetailPage
+            assistantSection="branding"
             eyebrow="Comunicación visual"
             title="Gráfica que ocupa"
             accent="su lugar."

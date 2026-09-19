@@ -121,7 +121,7 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ id: 
             <Header />
 
             {/* Hero Section */}
-            <section className="relative w-full aspect-[21/9] max-h-[600px] overflow-hidden">
+            <section className="relative w-full aspect-[21/9] max-h-[600px] overflow-hidden" data-assistant-section="case-study">
                 <img
                     src={project.featured_image_url || allImages[0] || '/placeholder.jpg'}
                     alt={project.title}
@@ -150,7 +150,7 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ id: 
                 </Link>
 
                 {/* Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16" data-assistant-section="process">
                     {/* Left Column: Description */}
                     <div className="lg:col-span-8">
                         {narrativeParagraphs.length > 0 ? (
@@ -240,7 +240,7 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ id: 
 
                 {/* Image Gallery */}
                 {allImages.length > 0 && (
-                    <div className="mb-16">
+                    <div className="mb-16" data-assistant-section="portfolio">
                         <h2 className="text-2xl font-bold mb-8 flex items-center gap-3">
                             <span className="material-symbols-outlined text-[#13ec5b]">photo_library</span>
                             Galería del Proyecto
@@ -271,7 +271,7 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ id: 
                 )}
 
                 {/* CTA Section */}
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#102216] to-[#1a3a28] p-12 md:p-16 text-center">
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#102216] to-[#1a3a28] p-12 md:p-16 text-center" data-assistant-section="cta">
                     <div className="absolute inset-0 opacity-10">
                         <div className="absolute top-0 left-0 w-64 h-64 bg-[#13ec5b] rounded-full blur-[120px]" />
                         <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#13ec5b] rounded-full blur-[160px]" />
