@@ -3,11 +3,11 @@
     --alma-offset-y: 0px;
     position: fixed;
     z-index: 48;
-    bottom: 12px;
+    bottom: 18px;
     display: flex;
     align-items: flex-end;
-    gap: 8px;
-    width: min(300px, calc(100vw - 24px));
+    gap: 12px;
+    width: min(410px, calc(100vw - 32px));
     pointer-events: none;
     transition: left 700ms cubic-bezier(.22, 1, .36, 1), right 700ms cubic-bezier(.22, 1, .36, 1), transform 700ms cubic-bezier(.22, 1, .36, 1);
     transform: translateY(var(--alma-offset-y));
@@ -26,8 +26,8 @@
 
 .character {
     position: relative;
-    width: 66px;
-    height: 99px;
+    width: 132px;
+    height: 198px;
     flex: 0 0 auto;
     padding: 0;
     border: 0;
@@ -86,7 +86,7 @@
 .bubble {
     position: relative;
     width: min(218px, calc(100vw - 98px));
-    margin-bottom: 42px;
+    margin-bottom: 95px;
     border: 1px solid rgb(19 42 25 / 10%);
     border-radius: 14px 14px 5px 14px;
     background: rgb(255 253 247 / 96%);
@@ -185,8 +185,8 @@
 
 .menu {
     position: absolute;
-    right: 58px;
-    bottom: 14px;
+    right: 104px;
+    bottom: 34px;
     width: min(320px, calc(100vw - 158px));
     overflow: hidden;
     border: 1px solid rgb(19 42 25 / 11%);
@@ -201,7 +201,7 @@
 
 .position_left .menu {
     right: auto;
-    left: 58px;
+    left: 104px;
 }
 
 .menuHeader {
@@ -307,8 +307,8 @@
     }
 
     .character {
-        width: 41px;
-        height: 62px;
+        width: 82px;
+        height: 123px;
     }
 
     .position_left .characterStage,
@@ -320,7 +320,7 @@
     .position_left .bubble {
         position: absolute;
         right: 0;
-        bottom: 68px;
+        bottom: 128px;
         width: min(218px, calc(100vw - 76px));
         margin: 0;
         border-radius: 14px 14px 5px 14px;
@@ -339,7 +339,7 @@
     .position_left .menu {
         right: 0;
         left: auto;
-        bottom: 70px;
+        bottom: 128px;
         width: min(320px, calc(100vw - 20px));
     }
 

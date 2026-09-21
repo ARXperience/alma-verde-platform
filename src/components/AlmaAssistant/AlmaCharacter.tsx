@@ -36,7 +36,7 @@ export function AlmaCharacter({ pose, onClick }: AlmaCharacterProps) {
                     src={poseAssets[pose]}
                     alt=""
                     fill
-                    sizes="96px"
+                    sizes="160px"
                     priority
                     className={styles.characterImage}
                 />
