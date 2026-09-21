@@ -30,15 +30,22 @@ export function AlmaAssistant() {
     const [reducedMotion, setReducedMotion] = useState(false)
     const dismissedSection = useRef<string | null>(null)
     const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const currentSectionRef = useRef(currentSection)
 
     const hidden = HIDDEN_ROUTES.some((route) => pathname.startsWith(route))
     const content = assistantContent[currentSection] || assistantContent.hero
 
-    const showMessage = useCallback((section: string) => {
+    const showMessage = useCallback((section: string, immediate = false) => {
         if (dismissedSection.current === section) return
-        setBubbleVisible(true)
+        setBubbleVisible(false)
+        if (showTimer.current) clearTimeout(showTimer.current)
         if (hideTimer.current) clearTimeout(hideTimer.current)
-        hideTimer.current = setTimeout(() => setBubbleVisible(false), 9000)
+        showTimer.current = setTimeout(() => {
+            if (dismissedSection.current === section) return
+            setBubbleVisible(true)
+            hideTimer.current = setTimeout(() => setBubbleVisible(false), 4800)
+        }, immediate ? 0 : 650)
     }, [])
 
     useEffect(() => {
@@ -98,13 +105,12 @@ export function AlmaAssistant() {
                 }, null)
                 const sectionName = active?.dataset.assistantSection
                 if (sectionName && assistantContent[sectionName] && (ratios.get(active) || 0) > 0) {
-                    setCurrentSection((previous) => {
-                        if (previous !== sectionName) {
-                            dismissedSection.current = null
-                            showMessage(sectionName)
-                        }
-                        return sectionName
-                    })
+                    if (currentSectionRef.current !== sectionName) {
+                        currentSectionRef.current = sectionName
+                        dismissedSection.current = null
+                        setCurrentSection(sectionName)
+                        showMessage(sectionName)
+                    }
                 }
             }, { rootMargin: '-32% 0px -38% 0px', threshold: [0, 0.2, 0.45, 0.7] })
 
@@ -115,6 +121,7 @@ export function AlmaAssistant() {
 
         let cleanup: () => void = () => {}
         const timer = window.setTimeout(() => {
+            currentSectionRef.current = initial
             setCurrentSection(initial)
             cleanup = setupObserver()
         }, 120)
@@ -122,6 +129,7 @@ export function AlmaAssistant() {
         return () => {
             window.clearTimeout(timer)
             cleanup()
+            if (showTimer.current) clearTimeout(showTimer.current)
             if (hideTimer.current) clearTimeout(hideTimer.current)
         }
     }, [hidden, minimized, pathname, showMessage])
@@ -144,7 +152,7 @@ export function AlmaAssistant() {
     const restore = () => {
         setMinimized(false)
         window.localStorage.removeItem(MINIMIZED_KEY)
-        window.setTimeout(() => showMessage(currentSection), 50)
+        window.setTimeout(() => showMessage(currentSection, true), 50)
     }
 
     const handleNavigate = (href: string) => {
@@ -175,6 +183,7 @@ export function AlmaAssistant() {
         >
             <AlmaMenu open={menuOpen} onClose={() => setMenuOpen(false)} onNavigate={handleNavigate} />
             <AlmaBubble
+                key={currentSection}
                 message={activeMessage}
                 visible={bubbleVisible && !menuOpen}
                 onClose={() => {

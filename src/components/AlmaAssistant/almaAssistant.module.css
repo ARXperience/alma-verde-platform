@@ -56,65 +56,120 @@
 .characterStage {
     position: absolute;
     inset: 0;
-    animation: alma-breathe 4.8s ease-in-out infinite;
+    transform-origin: bottom center;
 }
 
-.bodyLayer {
-    object-fit: contain;
-}
-
+.rigLayer,
 .headLayer {
     position: absolute;
     inset: 0;
-    transform-origin: 50% 35%;
-    transition: transform 700ms cubic-bezier(.22, 1, .36, 1);
-    animation: alma-look 8s ease-in-out infinite;
+    will-change: transform;
 }
 
+.rigLayer img,
 .headLayer img {
     object-fit: contain;
 }
 
-.mouth {
+.leftLeg {
+    z-index: 1;
+    transform-origin: 40.5% 58.5%;
+}
+
+.rightLeg {
+    z-index: 1;
+    transform-origin: 53.5% 58.5%;
+}
+
+.coreLayer {
+    z-index: 2;
+}
+
+.leftArm {
+    z-index: 3;
+    transform-origin: 39.5% 37%;
+}
+
+.rightArm {
+    z-index: 3;
+    transform-origin: 61% 37%;
+}
+
+.headLayer {
+    z-index: 4;
+    transform-origin: 50% 35%;
+}
+
+.faceLayer {
     position: absolute;
-    top: 29.8%;
-    left: 50.1%;
-    width: 8.5%;
-    height: 1.8%;
-    border-radius: 999px;
-    background: #171710;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: #171710;
+}
+
+.eyeGroup {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 110ms ease;
+}
+
+.brows {
+    fill: none;
+    stroke: #171710;
+    stroke-width: 4;
+    stroke-linecap: round;
     opacity: 0;
-    transform: translate(-50%, -50%) scaleY(.25);
+    transition: opacity 220ms ease, transform 320ms ease;
+}
+
+.expression_curious,
+.expression_focused,
+.expression_surprised {
+    opacity: .82;
+}
+
+.expression_curious path:first-child {
+    transform: translateY(-3px) rotate(-5deg);
+    transform-origin: center;
+}
+
+.expression_focused path:first-child {
+    transform: rotate(8deg);
+    transform-origin: center;
+}
+
+.expression_focused path:last-child {
+    transform: rotate(-8deg);
+    transform-origin: center;
+}
+
+.faceSmile {
+    fill: none;
+    stroke: #171710;
+    stroke-width: 7;
+    stroke-linecap: round;
+}
+
+.faceMouth {
+    fill: #171710;
+    transform-box: fill-box;
     transform-origin: center top;
-    transition: opacity 90ms linear, transform 110ms ease;
 }
-
-.mouthOpen {
-    opacity: .96;
-    transform: translate(-50%, -15%) scaleY(1.7);
-}
-
-.pose_wave .headLayer { transform: rotate(-2deg) translateY(-1px); }
-.pose_point .headLayer { transform: rotate(3deg) translateX(1px); }
-.pose_think .headLayer { transform: rotate(-6deg) translate(-1px, 1px); }
-.pose_build .headLayer { transform: rotate(2deg) translateY(1px); }
-.pose_plant .headLayer { transform: rotate(-3deg) translateY(-2px); }
-.pose_draw .headLayer { transform: rotate(5deg) translateY(1px); }
-.pose_sit .headLayer { transform: rotate(-3deg); }
-.pose_walk .characterStage { animation: alma-walk 2.8s ease-in-out infinite; }
-.pose_celebrate .characterStage { animation: alma-celebrate 3.2s ease-in-out infinite; }
 
 .bubble {
     position: relative;
-    width: min(288px, calc(100vw - 172px));
-    margin-bottom: 95px;
+    width: min(242px, calc(100vw - 172px));
+    margin-bottom: 76px;
     border: 1px solid rgb(19 42 25 / 10%);
-    border-radius: 20px 20px 6px 20px;
+    border-radius: 16px 16px 5px 16px;
     background: rgb(255 253 247 / 96%);
-    box-shadow: 0 18px 50px rgb(6 22 11 / 15%);
+    box-shadow: 0 12px 34px rgb(6 22 11 / 12%);
     color: #162019;
     opacity: 0;
-    padding: 15px 16px 16px;
+    padding: 10px 11px 11px;
     pointer-events: none;
     transform: translateY(8px) scale(.98);
     transform-origin: bottom right;
@@ -122,8 +177,12 @@
     backdrop-filter: blur(12px);
 }
 
+.bubbleExpanded {
+    width: min(278px, calc(100vw - 172px));
+}
+
 .position_left .bubble {
-    border-radius: 20px 20px 20px 6px;
+    border-radius: 16px 16px 16px 5px;
     transform-origin: bottom left;
 }
 
@@ -157,7 +216,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .bubbleHeader > span,
@@ -177,8 +236,8 @@
 .bubble button,
 .menuHeader button {
     display: inline-flex;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     align-items: center;
     justify-content: center;
     border: 0;
@@ -196,8 +255,42 @@
 
 .bubble p {
     margin: 0;
-    font-size: 13px;
-    line-height: 1.55;
+    font-size: 11.5px;
+    line-height: 1.46;
+}
+
+.bubbleTextCompact {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.readButton {
+    display: inline-flex !important;
+    width: auto !important;
+    height: auto !important;
+    align-items: center;
+    gap: 3px;
+    margin-top: 6px;
+    padding: 2px 0 !important;
+    border-radius: 0 !important;
+    color: #168340 !important;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: .04em;
+}
+
+.readButton:hover {
+    background: transparent !important;
+}
+
+.readButton svg {
+    transition: transform 200ms ease;
+}
+
+.chevronExpanded {
+    transform: rotate(180deg);
 }
 
 .menu {
@@ -282,28 +375,6 @@
     cursor: pointer;
 }
 
-@keyframes alma-breathe {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-2px) scale(1.006); }
-}
-
-@keyframes alma-look {
-    0%, 34%, 100% { margin-left: 0; }
-    38%, 46% { margin-left: 1px; }
-}
-
-@keyframes alma-walk {
-    0%, 100% { transform: translateX(0) rotate(0); }
-    30% { transform: translateX(-3px) rotate(-1deg); }
-    65% { transform: translateX(3px) rotate(1deg); }
-}
-
-@keyframes alma-celebrate {
-    0%, 76%, 100% { transform: translateY(0); }
-    84% { transform: translateY(-5px); }
-    92% { transform: translateY(-2px); }
-}
-
 @keyframes alma-menu-in {
     from { opacity: 0; transform: translateY(8px) scale(.98); }
     to { opacity: 1; transform: translateY(0) scale(1); }
@@ -333,10 +404,15 @@
         position: absolute;
         right: 0;
         bottom: 128px;
-        width: min(286px, calc(100vw - 32px));
+        width: min(236px, calc(100vw - 112px));
         margin: 0;
         border-radius: 18px 18px 5px 18px;
         transform-origin: bottom right;
+    }
+
+    .bubbleExpanded,
+    .position_left .bubbleExpanded {
+        width: min(272px, calc(100vw - 68px));
     }
 
     .bubble::after,
@@ -367,6 +443,7 @@
     .assistant,
     .character,
     .characterStage,
+    .rigLayer,
     .headLayer,
     .bubble,
     .menu {
@@ -374,4 +451,3 @@
         transition-duration: 0.01ms !important;
     }
 }
-
