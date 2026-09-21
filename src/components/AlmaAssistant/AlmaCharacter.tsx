@@ -12,13 +12,13 @@ interface AlmaCharacterProps {
 const poseAssets: Record<AlmaPose, string> = {
     idle: '/alma/ensamble-assistant.webp',
     wave: '/alma/ensamble-assistant.webp',
-    point: '/alma/ensamble-point.webp',
+    point: '/alma/ensamble-assistant.webp',
     think: '/alma/ensamble-think.webp',
     build: '/alma/ensamble-build.webp',
     plant: '/alma/ensamble-plant.webp',
     draw: '/alma/ensamble-build.webp',
     sit: '/alma/ensamble-think.webp',
-    walk: '/alma/ensamble-point.webp',
+    walk: '/alma/ensamble-assistant.webp',
     celebrate: '/alma/ensamble-celebrate.webp',
 }
 
