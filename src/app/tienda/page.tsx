@@ -141,9 +141,9 @@ export default function TiendaPage() {
             </section>
 
             <section id="catalogo" className="scroll-mt-24 border-t border-white/7 bg-[#070a08] pb-28">
-                <div className="sticky top-[73px] z-30 border-b border-white/8 bg-[#070a08]/92 backdrop-blur-xl lg:top-[114px] xl:top-[73px]">
-                    <div className="mx-auto flex max-w-[1500px] flex-col gap-4 px-6 py-5 md:px-10 lg:flex-row lg:items-center lg:px-16">
-                        <label className="relative block w-full lg:max-w-sm">
+                <div className="border-b border-white/8 bg-[#070a08]">
+                    <div className="mx-auto grid max-w-[1500px] gap-4 px-6 py-5 md:px-10 lg:px-16 xl:grid-cols-[minmax(280px,420px)_minmax(0,1fr)_auto] xl:items-center">
+                        <label className="relative block w-full">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/35" size={18} />
                             <input
                                 type="search"
@@ -154,7 +154,7 @@ export default function TiendaPage() {
                             />
                         </label>
 
-                        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
+                        <div className="flex min-w-0 gap-2 overflow-x-auto pb-1 [scrollbar-width:none] xl:pb-0">
                             {CATEGORIES.map((category) => (
                                 <button
                                     key={category.id}
@@ -167,7 +167,7 @@ export default function TiendaPage() {
                             ))}
                         </div>
 
-                        <span className="ml-auto hidden shrink-0 text-xs font-semibold text-white/35 xl:block">
+                        <span className="hidden shrink-0 text-right text-xs font-semibold text-white/35 xl:block">
                             {filteredProducts.length} resultados
                         </span>
                     </div>
