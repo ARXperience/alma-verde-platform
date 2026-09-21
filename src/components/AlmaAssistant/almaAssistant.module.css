@@ -26,8 +26,8 @@
 
 .character {
     position: relative;
-    width: 132px;
-    height: 198px;
+    width: 106px;
+    height: 158px;
     flex: 0 0 auto;
     padding: 0;
     border: 0;
@@ -86,7 +86,7 @@
 .bubble {
     position: relative;
     width: min(218px, calc(100vw - 98px));
-    margin-bottom: 95px;
+    margin-bottom: 76px;
     border: 1px solid rgb(19 42 25 / 10%);
     border-radius: 14px 14px 5px 14px;
     background: rgb(255 253 247 / 96%);
@@ -185,8 +185,8 @@
 
 .menu {
     position: absolute;
-    right: 104px;
-    bottom: 34px;
+    right: 84px;
+    bottom: 27px;
     width: min(320px, calc(100vw - 158px));
     overflow: hidden;
     border: 1px solid rgb(19 42 25 / 11%);
@@ -201,7 +201,7 @@
 
 .position_left .menu {
     right: auto;
-    left: 104px;
+    left: 84px;
 }
 
 .menuHeader {
@@ -307,8 +307,8 @@
     }
 
     .character {
-        width: 82px;
-        height: 123px;
+        width: 66px;
+        height: 98px;
     }
 
     .position_left .characterStage,
@@ -320,7 +320,7 @@
     .position_left .bubble {
         position: absolute;
         right: 0;
-        bottom: 128px;
+        bottom: 103px;
         width: min(218px, calc(100vw - 76px));
         margin: 0;
         border-radius: 14px 14px 5px 14px;
@@ -339,7 +339,7 @@
     .position_left .menu {
         right: 0;
         left: auto;
-        bottom: 128px;
+        bottom: 103px;
         width: min(320px, calc(100vw - 20px));
     }
 
