@@ -59,30 +59,21 @@
     animation: alma-breathe 4.8s ease-in-out infinite;
 }
 
-.bodyLayer {
+.characterImage {
     object-fit: contain;
-}
-
-.headLayer {
-    position: absolute;
-    inset: 0;
-    transform-origin: 50% 35%;
-    transition: transform 700ms cubic-bezier(.22, 1, .36, 1);
-    animation: alma-look 8s ease-in-out infinite;
-}
-
-.headLayer img {
-    object-fit: contain;
+    transform-origin: center bottom;
+    animation: ensamble-presence 7s ease-in-out infinite;
 }
 
 .mouth {
     position: absolute;
-    top: 29.8%;
-    left: 50.1%;
-    width: 8.5%;
-    height: 1.8%;
+    z-index: 2;
+    top: 19.25%;
+    left: 54.4%;
+    width: 5.8%;
+    height: 1.1%;
     border-radius: 999px;
-    background: #171710;
+    background: #211a16;
     opacity: 0;
     transform: translate(-50%, -50%) scaleY(.25);
     transform-origin: center top;
@@ -90,17 +81,16 @@
 }
 
 .mouthOpen {
-    opacity: .96;
-    transform: translate(-50%, -15%) scaleY(1.7);
+    opacity: .98;
+    transform: translate(-50%, -5%) scaleY(2.4);
 }
 
-.pose_wave .headLayer { transform: rotate(-2deg) translateY(-1px); }
-.pose_point .headLayer { transform: rotate(3deg) translateX(1px); }
-.pose_think .headLayer { transform: rotate(-6deg) translate(-1px, 1px); }
-.pose_build .headLayer { transform: rotate(2deg) translateY(1px); }
-.pose_plant .headLayer { transform: rotate(-3deg) translateY(-2px); }
-.pose_draw .headLayer { transform: rotate(5deg) translateY(1px); }
-.pose_sit .headLayer { transform: rotate(-3deg); }
+.pose_point .characterImage { transform: rotate(1deg); }
+.pose_think .characterImage { transform: rotate(-1.2deg); }
+.pose_build .characterImage { transform: translateY(1px); }
+.pose_plant .characterImage { transform: rotate(-.8deg); }
+.pose_draw .characterImage { transform: rotate(1.2deg); }
+.pose_sit .characterImage { transform: translateY(2px); }
 .pose_walk .characterStage { animation: alma-walk 2.8s ease-in-out infinite; }
 .pose_celebrate .characterStage { animation: alma-celebrate 3.2s ease-in-out infinite; }
 
@@ -287,9 +277,9 @@
     50% { transform: translateY(-2px) scale(1.006); }
 }
 
-@keyframes alma-look {
-    0%, 34%, 100% { margin-left: 0; }
-    38%, 46% { margin-left: 1px; }
+@keyframes ensamble-presence {
+    0%, 36%, 100% { transform: rotate(0deg) translateX(0); }
+    42%, 48% { transform: rotate(.7deg) translateX(1px); }
 }
 
 @keyframes alma-walk {
@@ -367,7 +357,7 @@
     .assistant,
     .character,
     .characterStage,
-    .headLayer,
+    .characterImage,
     .bubble,
     .menu {
         animation: none !important;

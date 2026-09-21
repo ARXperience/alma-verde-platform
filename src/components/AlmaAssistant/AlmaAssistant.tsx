@@ -161,7 +161,7 @@ export function AlmaAssistant() {
 
     if (minimized) {
         return (
-            <button type="button" className={styles.restoreButton} onClick={restore} aria-label="Mostrar a Alma">
+            <button type="button" className={styles.restoreButton} onClick={restore} aria-label="Mostrar a Ensamble">
                 <Leaf aria-hidden="true" size={22} />
             </button>
         )

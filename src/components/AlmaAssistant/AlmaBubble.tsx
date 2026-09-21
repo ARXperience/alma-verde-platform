@@ -17,9 +17,9 @@ export function AlmaBubble({ message, visible, onClose, onMinimize }: AlmaBubble
             aria-atomic="true"
         >
             <div className={styles.bubbleHeader}>
-                <span>Una nota de Alma</span>
+                <span>Ensamble te cuenta</span>
                 <div className={styles.bubbleActions}>
-                    <button type="button" onClick={onMinimize} aria-label="Minimizar a Alma">
+                    <button type="button" onClick={onMinimize} aria-label="Minimizar a Ensamble">
                         <Minus aria-hidden="true" size={14} />
                     </button>
                     <button type="button" onClick={onClose} aria-label="Cerrar este mensaje">

@@ -12,13 +12,13 @@ export function AlmaMenu({ open, onClose, onNavigate }: AlmaMenuProps) {
     if (!open) return null
 
     return (
-        <div className={styles.menu} role="dialog" aria-modal="false" aria-label="Navegación asistida por Alma">
+        <div className={styles.menu} role="dialog" aria-modal="false" aria-label="Navegación asistida por Ensamble">
             <div className={styles.menuHeader}>
                 <div>
-                    <span>Alma te orienta</span>
+                    <span>Ensamble te orienta</span>
                     <h2>¿Te ayudo a encontrar algo?</h2>
                 </div>
-                <button type="button" onClick={onClose} aria-label="Cerrar menú de Alma">
+                <button type="button" onClick={onClose} aria-label="Cerrar menú de Ensamble">
                     <X aria-hidden="true" size={16} />
                 </button>
             </div>
@@ -33,4 +33,3 @@ export function AlmaMenu({ open, onClose, onNavigate }: AlmaMenuProps) {
         </div>
     )
 }
-

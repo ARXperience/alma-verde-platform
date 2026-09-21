@@ -23,7 +23,7 @@ export interface AssistantSectionContent {
 
 export const assistantContent: Record<string, AssistantSectionContent> = {
     hero: {
-        message: 'Hola. Soy Alma. Por aquí convertimos ideas en espacios que las personas pueden recorrer, tocar y recordar. Te acompaño.',
+        message: 'Hola. Soy Ensamble. Por aquí convertimos ideas en espacios que las personas pueden recorrer, tocar y recordar. Te acompaño.',
         pose: 'wave',
         position: 'right',
         scale: 1.08,
@@ -166,4 +166,3 @@ export const navigationOptions = [
     { label: 'Quiero ver proyectos', href: '/portafolio' },
     { label: 'Quiero hablar con Alma Verde', href: '/contacto' },
 ]
-
