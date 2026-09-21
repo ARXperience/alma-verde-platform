@@ -26,19 +26,26 @@ export function AlmaAssistant() {
     const [bubbleVisible, setBubbleVisible] = useState(false)
     const [menuOpen, setMenuOpen] = useState(false)
     const [minimized, setMinimized] = useState(false)
-    const [mouthOpen, setMouthOpen] = useState(false)
     const [reducedMotion, setReducedMotion] = useState(false)
     const dismissedSection = useRef<string | null>(null)
     const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const currentSectionRef = useRef(currentSection)
 
     const hidden = HIDDEN_ROUTES.some((route) => pathname.startsWith(route))
     const content = assistantContent[currentSection] || assistantContent.hero
 
-    const showMessage = useCallback((section: string) => {
+    const showMessage = useCallback((section: string, delay = 650) => {
         if (dismissedSection.current === section) return
-        setBubbleVisible(true)
+        setBubbleVisible(false)
+        if (showTimer.current) clearTimeout(showTimer.current)
         if (hideTimer.current) clearTimeout(hideTimer.current)
-        hideTimer.current = setTimeout(() => setBubbleVisible(false), 9000)
+        showTimer.current = setTimeout(() => {
+            if (dismissedSection.current === section) return
+            setBubbleVisible(true)
+            hideTimer.current = setTimeout(() => setBubbleVisible(false), 4200)
+        }, delay)
     }, [])
 
     useEffect(() => {
@@ -100,6 +107,7 @@ export function AlmaAssistant() {
                 if (sectionName && assistantContent[sectionName] && (ratios.get(active) || 0) > 0) {
                     setCurrentSection((previous) => {
                         if (previous !== sectionName) {
+                            currentSectionRef.current = sectionName
                             dismissedSection.current = null
                             showMessage(sectionName)
                         }
@@ -115,6 +123,7 @@ export function AlmaAssistant() {
 
         let cleanup: () => void = () => {}
         const timer = window.setTimeout(() => {
+            currentSectionRef.current = initial
             setCurrentSection(initial)
             cleanup = setupObserver()
         }, 120)
@@ -122,17 +131,27 @@ export function AlmaAssistant() {
         return () => {
             window.clearTimeout(timer)
             cleanup()
+            if (showTimer.current) clearTimeout(showTimer.current)
             if (hideTimer.current) clearTimeout(hideTimer.current)
         }
     }, [hidden, minimized, pathname, showMessage])
 
     useEffect(() => {
-        if (reducedMotion || (!bubbleVisible && !menuOpen)) {
-            return
+        if (hidden || minimized) return
+
+        const handleScroll = () => {
+            setBubbleVisible(false)
+            if (showTimer.current) clearTimeout(showTimer.current)
+            if (scrollTimer.current) clearTimeout(scrollTimer.current)
+            scrollTimer.current = setTimeout(() => showMessage(currentSectionRef.current, 200), 850)
         }
-        const interval = window.setInterval(() => setMouthOpen((open) => !open), 230)
-        return () => window.clearInterval(interval)
-    }, [bubbleVisible, menuOpen, reducedMotion])
+
+        window.addEventListener('scroll', handleScroll, { passive: true })
+        return () => {
+            window.removeEventListener('scroll', handleScroll)
+            if (scrollTimer.current) clearTimeout(scrollTimer.current)
+        }
+    }, [hidden, minimized, showMessage])
 
     const minimize = () => {
         setMinimized(true)
@@ -144,7 +163,7 @@ export function AlmaAssistant() {
     const restore = () => {
         setMinimized(false)
         window.localStorage.removeItem(MINIMIZED_KEY)
-        window.setTimeout(() => showMessage(currentSection), 50)
+        window.setTimeout(() => showMessage(currentSection, 0), 50)
     }
 
     const handleNavigate = (href: string) => {
@@ -185,7 +204,6 @@ export function AlmaAssistant() {
             />
             <AlmaCharacter
                 pose={content.pose}
-                mouthOpen={mouthOpen && !reducedMotion && (bubbleVisible || menuOpen)}
                 onClick={() => {
                     setMenuOpen((open) => !open)
                     setBubbleVisible(false)

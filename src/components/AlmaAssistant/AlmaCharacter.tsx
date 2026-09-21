@@ -6,11 +6,23 @@ import styles from './almaAssistant.module.css'
 
 interface AlmaCharacterProps {
     pose: AlmaPose
-    mouthOpen: boolean
     onClick: () => void
 }
 
-export function AlmaCharacter({ pose, mouthOpen, onClick }: AlmaCharacterProps) {
+const poseAssets: Record<AlmaPose, string> = {
+    idle: '/alma/ensamble-assistant.webp',
+    wave: '/alma/ensamble-assistant.webp',
+    point: '/alma/ensamble-point.webp',
+    think: '/alma/ensamble-think.webp',
+    build: '/alma/ensamble-build.webp',
+    plant: '/alma/ensamble-plant.webp',
+    draw: '/alma/ensamble-build.webp',
+    sit: '/alma/ensamble-think.webp',
+    walk: '/alma/ensamble-point.webp',
+    celebrate: '/alma/ensamble-celebrate.webp',
+}
+
+export function AlmaCharacter({ pose, onClick }: AlmaCharacterProps) {
     return (
         <button
             type="button"
@@ -21,14 +33,13 @@ export function AlmaCharacter({ pose, mouthOpen, onClick }: AlmaCharacterProps) 
         >
             <span className={styles.characterStage} aria-hidden="true">
                 <Image
-                    src="/alma/ensamble-assistant.webp"
+                    src={poseAssets[pose]}
                     alt=""
                     fill
-                    sizes="190px"
+                    sizes="96px"
                     priority
                     className={styles.characterImage}
                 />
-                <span className={`${styles.mouth} ${mouthOpen ? styles.mouthOpen : ''}`} />
             </span>
             <span className="sr-only">Ensamble, asistente de navegación de Alma Verde Diseño</span>
         </button>
