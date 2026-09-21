@@ -188,7 +188,7 @@ export function AlmaAssistant() {
 
     return (
         <div
-            className={`${styles.assistant} ${styles[`position_${content.position}`]}`}
+            className={`${styles.assistant} ${styles.position_right}`}
             style={{ '--alma-scale': content.scale || 1, '--alma-offset-y': `${content.offsetY || 0}px` } as React.CSSProperties}
             data-pose={content.pose}
         >
