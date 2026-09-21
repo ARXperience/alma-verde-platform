@@ -1,15 +1,28 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
+import {
+    ArrowLeft,
+    CalendarDays,
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    Loader2,
+    Maximize2,
+    MessageCircle,
+    RotateCcw,
+    ShieldCheck,
+    ShoppingBag,
+    ShoppingCart,
+    Truck,
+    X,
+} from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useCart } from '@/contexts/CartContext'
-import { Header } from "@/components/layout/Header"
-import { Footer } from "@/components/layout/Footer"
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Loader2, ArrowLeft, ShoppingCart, MessageCircle, ChevronLeft, ChevronRight, Check, X, RotateCcw, CalendarDays } from 'lucide-react'
-import Image from 'next/image'
+import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
 
 interface Product {
     id: string
@@ -26,11 +39,24 @@ interface Product {
     slug?: string
 }
 
+const categoryLabels: Record<string, string> = {
+    FURNITURE: 'Mobiliario',
+    DECORATION: 'Decoración',
+    STAND: 'Stands',
+    ACCESSORY: 'Accesorios',
+    SERVICE: 'Servicios',
+}
+
+const benefits = [
+    { Icon: ShieldCheck, label: 'Calidad verificada' },
+    { Icon: Truck, label: 'Entrega coordinada' },
+    { Icon: MessageCircle, label: 'Asesoría directa' },
+]
+
 export default function TiendaProductPage() {
     const params = useParams()
     const router = useRouter()
     const productId = params.id as string
-
     const [product, setProduct] = useState<Product | null>(null)
     const [loading, setLoading] = useState(true)
     const [activeImage, setActiveImage] = useState(0)
@@ -38,65 +64,76 @@ export default function TiendaProductPage() {
     const { addItem, setIsOpen } = useCart()
 
     useEffect(() => {
-        fetchProduct()
-    }, [productId])
+        async function fetchProduct() {
+            try {
+                setLoading(true)
+                const { data, error } = await supabase
+                    .from('products')
+                    .select('*')
+                    .eq('id', productId)
+                    .single()
 
-    async function fetchProduct() {
-        try {
-            setLoading(true)
-            const { data, error } = await supabase
-                .from('products')
-                .select('*')
-                .eq('id', productId)
-                .single()
-            
-            if (error) throw error
-            setProduct(data as Product)
-        } catch (error) {
-            console.error('Error fetching product:', error)
-            router.push('/tienda')
-        } finally {
-            setLoading(false)
+                if (error) throw error
+                setProduct(data as Product)
+            } catch (error) {
+                console.error('Error fetching product:', error)
+                router.push('/tienda')
+            } finally {
+                setLoading(false)
+            }
         }
-    }
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0
-        }).format(amount)
-    }
+        fetchProduct()
+    }, [productId, router])
+
+    const formatCurrency = (amount: number) => new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+    }).format(amount)
 
     const nextImage = () => {
-        if (product && product.images) {
-            setActiveImage((prev) => (prev + 1) % product.images.length)
+        if (product?.images?.length) {
+            setActiveImage((current) => (current + 1) % product.images.length)
         }
     }
 
-    const prevImage = () => {
-        if (product && product.images) {
-            setActiveImage((prev) => (prev - 1 + product.images.length) % product.images.length)
+    const previousImage = () => {
+        if (product?.images?.length) {
+            setActiveImage((current) => (current - 1 + product.images.length) % product.images.length)
         }
+    }
+
+    const handleAddToCart = () => {
+        if (!product) return
+        addItem({
+            productId: product.id,
+            name: product.name,
+            price: product.is_rental ? product.rental_price || 0 : product.price,
+            quantity: 1,
+            image: product.images?.[0] || '',
+            businessUnit: product.business_unit,
+            slug: product.slug || '',
+        })
+        setIsOpen(true)
     }
 
     const handleQuote = () => {
-        const typeLabel = product?.is_rental ? 'alquilar' : 'comprar'
-        const priceInfo = product?.is_rental && product?.rental_price 
-            ? `Renta: ${formatCurrency(product.rental_price)}/día` 
+        const action = product?.is_rental ? 'alquilar' : 'comprar'
+        const price = product?.is_rental && product.rental_price
+            ? `Renta: ${formatCurrency(product.rental_price)}/día`
             : formatCurrency(product?.price || 0)
-        const message = `¡Hola! Estoy interesado en ${typeLabel} el producto: ${product?.name} (${priceInfo}).`
-        const wpUrl = `https://wa.me/573000000000?text=${encodeURIComponent(message)}`
-        window.open(wpUrl, '_blank')
+        const message = `¡Hola! Estoy interesado en ${action} el producto: ${product?.name} (${price}).`
+        window.open(`https://wa.me/573000000000?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer')
     }
 
     if (loading) {
         return (
-            <main className="min-h-screen bg-[#f6f8f6] dark:bg-[#102216] font-display flex flex-col">
-                <Header />
-                <div className="flex-1 flex flex-col items-center justify-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-[#13ec5b] mb-4" />
-                    <p className="text-gray-500 dark:text-gray-400 font-bold tracking-wide animate-pulse">Cargando producto...</p>
+            <main className="flex min-h-screen flex-col bg-[#070a08] font-display text-white">
+                <div className="text-[#0b140e]"><Header /></div>
+                <div className="flex flex-1 flex-col items-center justify-center">
+                    <Loader2 className="mb-4 animate-spin text-[#13ec5b]" size={40} />
+                    <p className="text-sm font-semibold text-white/40">Preparando la pieza…</p>
                 </div>
                 <Footer />
             </main>
@@ -105,286 +142,165 @@ export default function TiendaProductPage() {
 
     if (!product) return null
 
+    const mainImage = product.images?.[activeImage]
+    const category = categoryLabels[product.category] || product.category
+    const brand = product.business_unit?.toLowerCase() === 'alma_home' ? 'Alma Home' : 'Alma Verde'
+
     return (
-        <main className="min-h-screen bg-[#f6f8f6] dark:bg-[#102216] font-display selection:bg-[#13ec5b]/30 flex flex-col">
-            <Header />
-            
-            <div className="flex-1 container mx-auto px-4 md:px-6 pt-32 pb-20">
-                <button 
+        <main className="min-h-screen bg-[#070a08] font-display text-white selection:bg-[#13ec5b]/30">
+            <div className="text-[#0b140e]"><Header /></div>
+
+            <div className="mx-auto max-w-[1500px] px-6 pb-24 pt-8 md:px-10 lg:px-16 lg:pb-32 lg:pt-12">
+                <button
+                    type="button"
                     onClick={() => router.push('/tienda')}
-                    className="flex items-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors mb-8 group font-medium"
+                    className="group mb-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-white/42 transition hover:text-white"
                 >
-                    <ArrowLeft className="h-5 w-5 mr-2 transform group-hover:-translate-x-1 transition-transform" />
+                    <ArrowLeft className="transition-transform group-hover:-translate-x-1" size={17} />
                     Volver al catálogo
                 </button>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
-                    {/* Galería de Imágenes */}
-                    <div className="space-y-6">
-                        <div className="relative aspect-square rounded-3xl overflow-hidden bg-white dark:bg-[#152e1e] border border-gray-100 dark:border-[#1e402a] shadow-xl">
-                            {product.images && product.images.length > 0 ? (
-                                <>
-                                    <div 
-                                        className="absolute inset-0 cursor-zoom-in"
-                                        onClick={() => setIsViewerOpen(true)}
-                                    >
-                                        <Image
-                                            src={product.images[activeImage]}
-                                            alt={product.name}
-                                            fill
-                                            className="object-cover hover:scale-105 transition-transform duration-500"
-                                            priority
-                                        />
-                                    </div>
-                                    {product.images.length > 1 && (
-                                        <>
-                                            <button 
-                                                onClick={prevImage}
-                                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-[#13ec5b] text-gray-900 shadow-md backdrop-blur-sm p-3 rounded-full transition-all border border-gray-200"
-                                            >
-                                                <ChevronLeft className="h-6 w-6" />
-                                            </button>
-                                            <button 
-                                                onClick={nextImage}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-[#13ec5b] text-gray-900 shadow-md backdrop-blur-sm p-3 rounded-full transition-all border border-gray-200"
-                                            >
-                                                <ChevronRight className="h-6 w-6" />
-                                            </button>
-                                        </>
-                                    )}
-                                </>
+                <div className="grid gap-10 lg:grid-cols-[1.12fr_0.88fr] xl:gap-16">
+                    <section className="min-w-0">
+                        <div className="relative aspect-[4/4.15] overflow-hidden rounded-[30px] border border-white/8 bg-[#111612] shadow-[0_30px_90px_rgba(0,0,0,0.28)]">
+                            {mainImage ? (
+                                <button type="button" onClick={() => setIsViewerOpen(true)} className="absolute inset-0 cursor-zoom-in">
+                                    <Image
+                                        src={mainImage}
+                                        alt={product.name}
+                                        fill
+                                        priority
+                                        sizes="(max-width: 1024px) 100vw, 58vw"
+                                        className="object-cover transition-transform duration-700 hover:scale-[1.025]"
+                                    />
+                                </button>
                             ) : (
-                                <div className="absolute inset-0 flex items-center justify-center text-gray-300 dark:text-gray-700">
-                                    <ShoppingCart className="h-24 w-24 opacity-50" />
-                                </div>
+                                <div className="absolute inset-0 grid place-items-center text-white/12"><ShoppingBag size={72} strokeWidth={1.1} /></div>
                             )}
-                            
-                            {/* Badges */}
-                            <div className="absolute top-6 left-6 flex gap-2">
-                                {product.is_rental ? (
-                                    <Badge className="bg-blue-500/90 backdrop-blur-md text-white border-0 px-4 py-1.5 text-xs uppercase tracking-widest shadow-lg font-bold">
-                                        🔄 Disponible para Renta
-                                    </Badge>
-                                ) : (
-                                    <Badge className="bg-[#13ec5b]/90 backdrop-blur-md text-[#111813] border-0 px-4 py-1.5 text-xs uppercase tracking-widest shadow-lg font-bold">
-                                        🛒 En Venta
-                                    </Badge>
-                                )}
-                                {!product.in_stock && (
-                                    <Badge variant="destructive" className="bg-red-500/90 backdrop-blur-md border-red-500/20 px-4 py-1.5 text-xs text-white uppercase tracking-widest shadow-lg">
-                                        Agotado temporalmente
-                                    </Badge>
+
+                            <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-4 p-5 md:p-7">
+                                <span className={`rounded-full px-3.5 py-2 text-[9px] font-black uppercase tracking-[0.18em] ${product.is_rental ? 'bg-white/90 text-[#111813]' : 'bg-[#13ec5b] text-[#07110a]'}`}>
+                                    {product.is_rental ? 'Disponible para alquiler' : 'Disponible para compra'}
+                                </span>
+                                {mainImage && (
+                                    <span className="grid h-10 w-10 place-items-center rounded-full border border-white/18 bg-black/30 text-white/70 backdrop-blur-md"><Maximize2 size={16} /></span>
                                 )}
                             </div>
+
+                            {product.images?.length > 1 && (
+                                <>
+                                    <button type="button" onClick={previousImage} aria-label="Imagen anterior" className="absolute left-5 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/45 text-white backdrop-blur-md transition hover:bg-[#13ec5b] hover:text-[#07110a]">
+                                        <ChevronLeft size={20} />
+                                    </button>
+                                    <button type="button" onClick={nextImage} aria-label="Imagen siguiente" className="absolute right-5 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/45 text-white backdrop-blur-md transition hover:bg-[#13ec5b] hover:text-[#07110a]">
+                                        <ChevronRight size={20} />
+                                    </button>
+                                    <span className="absolute bottom-5 right-5 rounded-full bg-black/55 px-3 py-1.5 text-[10px] font-bold tracking-[0.16em] text-white/70 backdrop-blur-md">
+                                        {String(activeImage + 1).padStart(2, '0')} / {String(product.images.length).padStart(2, '0')}
+                                    </span>
+                                </>
+                            )}
                         </div>
 
-                        {/* Thumbnails */}
-                        {product.images && product.images.length > 1 && (
-                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-4">
-                                {product.images.map((url, idx) => (
+                        {product.images?.length > 1 && (
+                            <div className="mt-4 grid grid-cols-5 gap-3 sm:grid-cols-6">
+                                {product.images.map((image, index) => (
                                     <button
-                                        key={idx}
-                                        onClick={() => setActiveImage(idx)}
-                                        className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                                            activeImage === idx 
-                                            ? 'border-[#13ec5b] scale-105 shadow-md' 
-                                            : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600 opacity-70 hover:opacity-100 bg-white dark:bg-[#152e1e]'
-                                        }`}
+                                        key={image}
+                                        type="button"
+                                        onClick={() => setActiveImage(index)}
+                                        aria-label={`Ver imagen ${index + 1}`}
+                                        className={`relative aspect-square overflow-hidden rounded-xl border transition ${activeImage === index ? 'border-[#13ec5b] opacity-100' : 'border-white/8 opacity-48 hover:opacity-100'}`}
                                     >
-                                        <Image src={url} alt={`Thumbnail ${idx}`} fill className="object-cover" />
+                                        <Image src={image} alt="" fill sizes="120px" className="object-cover" />
                                     </button>
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </section>
 
-                    {/* Información del Producto */}
-                    <div className="flex flex-col justify-center">
-                        <div className="mb-8">
-                            <p className="text-gray-500 dark:text-gray-400 text-sm font-bold tracking-widest uppercase mb-4">
-                                {product.category} {product.business_unit === 'alma_home' ? '| Alma Home' : '| Alma Verde'}
-                            </p>
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white mb-6 leading-tight">
-                                {product.name}
-                            </h1>
+                    <section className="flex flex-col lg:py-4" data-assistant-section="materials">
+                        <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.22em] text-[#13ec5b]">
+                            <span>{category}</span><span className="h-1 w-1 rounded-full bg-white/25" /><span className="text-white/40">{brand}</span>
+                        </div>
 
-                            {/* Precios */}
-                            {product.is_rental ? (
-                                <div className="space-y-3 mb-6">
-                                    {product.rental_price && (
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400">
-                                                {formatCurrency(product.rental_price)}
-                                            </span>
-                                            <span className="text-lg text-gray-500 dark:text-gray-400">/día</span>
-                                        </div>
-                                    )}
-                                    {product.price > 0 && (
-                                        <p className="text-gray-500 dark:text-gray-400 text-md">
-                                            También a la venta: <span className="font-bold text-[#13ec5b]">{formatCurrency(product.price)}</span>
-                                        </p>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="flex items-end gap-4 mb-6">
-                                    <span className="text-3xl md:text-4xl font-bold text-[#13ec5b]">
-                                        {formatCurrency(product.price)}
-                                    </span>
-                                </div>
-                            )}
-                            
-                            {/* Tags/Features */}
-                            <div className="flex flex-wrap gap-3 mb-8">
-                                <div className="flex items-center text-gray-700 dark:text-gray-300 bg-white dark:bg-[#152e1e] px-4 py-2 rounded-full border border-gray-200 dark:border-[#1e402a] text-sm font-medium shadow-sm">
-                                    {product.in_stock ? (
-                                        <><Check className="h-4 w-4 text-[#13ec5b] mr-2" /> Disponible</>
-                                    ) : (
-                                        <><X className="h-4 w-4 text-red-500 mr-2" /> No disponible</>
-                                    )}
-                                </div>
+                        <h1 className="mt-5 text-[clamp(2.7rem,5vw,5.6rem)] font-black leading-[0.91] tracking-[-0.06em]">{product.name}</h1>
 
-                                {product.is_rental && (
-                                    <div className="flex items-center text-gray-700 dark:text-gray-300 bg-white dark:bg-[#152e1e] px-4 py-2 rounded-full border border-gray-200 dark:border-[#1e402a] text-sm font-medium shadow-sm">
-                                        <CalendarDays className="h-4 w-4 text-blue-500 mr-2" /> Alquiler por días
+                        <div className="mt-8 border-y border-white/10 py-6">
+                            {product.is_rental && product.rental_price ? (
+                                <div>
+                                    <div className="flex items-end gap-2">
+                                        <strong className="text-3xl font-black tracking-[-0.04em] md:text-4xl">{formatCurrency(product.rental_price)}</strong>
+                                        <span className="pb-1 text-sm text-white/40">/día</span>
                                     </div>
-                                )}
-
-                                <div className="flex items-center text-gray-700 dark:text-gray-300 bg-white dark:bg-[#152e1e] px-4 py-2 rounded-full border border-gray-200 dark:border-[#1e402a] text-sm font-medium shadow-sm">
-                                    <Check className="h-4 w-4 text-[#13ec5b] mr-2" /> Calidad Garantizada
+                                    {product.price > 0 && <p className="mt-2 text-sm text-white/42">También disponible para compra por {formatCurrency(product.price)}</p>}
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="prose prose-gray dark:prose-invert max-w-none mb-10">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Descripción del Producto</h3>
-                            <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed whitespace-pre-wrap">
-                                {product.description}
-                            </p>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row gap-4 mt-auto">
-                            {product.is_rental ? (
-                                <>
-                                    <Button 
-                                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-900/20 h-14 text-lg rounded-xl transition-all hover:scale-[1.02]"
-                                        disabled={!product.in_stock}
-                                        onClick={() => {
-                                            if (!product) return;
-                                            addItem({
-                                                productId: product.id,
-                                                name: product.name,
-                                                price: product.rental_price || 0, // Use rental price
-                                                quantity: 1,
-                                                image: product.images?.[0] || '',
-                                                businessUnit: product.business_unit,
-                                                slug: product.slug || ''
-                                            });
-                                            setIsOpen(true);
-                                        }}
-                                    >
-                                        <ShoppingCart className="mr-3 h-5 w-5" />
-                                        {product.in_stock ? 'Agregar (Pago Anticipado)' : 'Agotado'}
-                                    </Button>
-                                    <Button 
-                                        variant="outline"
-                                        className="flex-1 border-gray-200 dark:border-[#1e402a] bg-white hover:bg-gray-50 dark:bg-[#152e1e] dark:hover:bg-[#1e402a] text-gray-900 dark:text-white font-bold h-14 text-lg rounded-xl transition-all shadow-sm"
-                                        onClick={handleQuote}
-                                    >
-                                        <MessageCircle className="mr-3 h-5 w-5 text-blue-500" />
-                                        Cotizar por WhatsApp
-                                    </Button>
-                                </>
                             ) : (
-                                <>
-                                    <Button 
-                                        className="flex-1 bg-[#13ec5b] hover:bg-[#13ec5b]/90 text-[#111813] font-bold shadow-lg shadow-[#13ec5b]/20 h-14 text-lg rounded-xl transition-all hover:scale-[1.02]"
-                                        disabled={!product.in_stock}
-                                        onClick={() => {
-                                            if (!product) return;
-                                            addItem({
-                                                productId: product.id,
-                                                name: product.name,
-                                                price: product.price,
-                                                quantity: 1,
-                                                image: product.images?.[0] || '',
-                                                businessUnit: product.business_unit,
-                                                slug: product.slug || ''
-                                            });
-                                            setIsOpen(true);
-                                        }}
-                                    >
-                                        <ShoppingCart className="mr-3 h-5 w-5" />
-                                        {product.in_stock ? 'Agregar al Carrito' : 'Agotado'}
-                                    </Button>
-                                    <Button 
-                                        variant="outline"
-                                        className="flex-1 border-gray-200 dark:border-[#1e402a] bg-white hover:bg-gray-50 dark:bg-[#152e1e] dark:hover:bg-[#1e402a] text-gray-900 dark:text-white font-bold h-14 text-lg rounded-xl transition-all shadow-sm"
-                                        onClick={handleQuote}
-                                    >
-                                        <MessageCircle className="mr-3 h-5 w-5 text-[#13ec5b]" />
-                                        Cotizar por WhatsApp
-                                    </Button>
-                                </>
+                                <strong className="text-3xl font-black tracking-[-0.04em] md:text-4xl">{formatCurrency(product.price)}</strong>
                             )}
                         </div>
-                    </div>
+
+                        <div className="mt-6 flex flex-wrap gap-2">
+                            <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-bold ${product.in_stock ? 'border-[#13ec5b]/30 bg-[#13ec5b]/8 text-[#65f594]' : 'border-red-400/25 bg-red-400/8 text-red-300'}`}>
+                                {product.in_stock ? <Check size={14} /> : <X size={14} />}
+                                {product.in_stock ? 'Disponible' : 'No disponible'}
+                            </span>
+                            {product.is_rental && (
+                                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.045] px-3.5 py-2 text-xs font-bold text-white/60"><CalendarDays size={14} /> Alquiler por días</span>
+                            )}
+                            {product.stock_quantity !== null && product.in_stock && (
+                                <span className="rounded-full border border-white/10 bg-white/[0.045] px-3.5 py-2 text-xs font-bold text-white/60">{product.stock_quantity} unidades</span>
+                            )}
+                        </div>
+
+                        <div className="mt-9">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Sobre esta pieza</span>
+                            <p className="mt-4 whitespace-pre-wrap text-base leading-7 text-white/62">{product.description || 'Una solución seleccionada por Alma Verde para crear espacios funcionales, memorables y coherentes con tu marca.'}</p>
+                        </div>
+
+                        <div className="mt-10 rounded-[24px] border border-white/10 bg-white/[0.045] p-5">
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <button
+                                    type="button"
+                                    disabled={!product.in_stock}
+                                    onClick={handleAddToCart}
+                                    className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[#13ec5b] px-5 py-3.5 text-sm font-black text-[#07110a] transition hover:-translate-y-0.5 hover:bg-[#2cf371] disabled:cursor-not-allowed disabled:opacity-35"
+                                >
+                                    {product.is_rental ? <RotateCcw size={17} /> : <ShoppingCart size={17} />}
+                                    {product.in_stock ? (product.is_rental ? 'Agregar alquiler' : 'Agregar al carrito') : 'No disponible'}
+                                </button>
+                                <button type="button" onClick={handleQuote} className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-white/14 bg-white/[0.04] px-5 py-3.5 text-sm font-black text-white transition hover:border-white/30 hover:bg-white/[0.08]">
+                                    <MessageCircle size={17} className="text-[#13ec5b]" /> Consultar por WhatsApp
+                                </button>
+                            </div>
+                            {product.is_rental && <p className="mt-4 text-center text-[11px] leading-5 text-white/35">La disponibilidad y duración final del alquiler se confirman con nuestro equipo.</p>}
+                        </div>
+
+                        <div className="mt-7 grid gap-4 border-t border-white/10 pt-7 sm:grid-cols-3">
+                            {benefits.map(({ Icon, label }) => (
+                                <div key={label} className="flex items-center gap-3 text-xs font-semibold text-white/48">
+                                    <Icon size={17} className="text-[#13ec5b]" /> {label}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
                 </div>
             </div>
 
             <Footer />
 
-            {/* Image Viewer Modal */}
-            {isViewerOpen && product && product.images && product.images.length > 0 && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm">
-                    <button 
-                        onClick={() => setIsViewerOpen(false)}
-                        className="absolute top-6 right-6 text-white/70 hover:text-white bg-black/50 hover:bg-[#13ec5b]/20 p-3 rounded-full transition-all z-50"
-                    >
-                        <X className="h-8 w-8" />
+            {isViewerOpen && mainImage && (
+                <div role="dialog" aria-modal="true" aria-label={`Galería de ${product.name}`} className="fixed inset-0 z-[70] flex items-center justify-center bg-black/96 p-4 backdrop-blur-md" onClick={() => setIsViewerOpen(false)}>
+                    <button type="button" onClick={() => setIsViewerOpen(false)} aria-label="Cerrar galería" className="absolute right-5 top-5 z-20 grid h-11 w-11 place-items-center rounded-full border border-white/12 bg-white/8 text-white/70 transition hover:bg-white/15 hover:text-white">
+                        <X size={22} />
                     </button>
-                    
-                    <div className="relative w-full h-full max-w-7xl max-h-[85vh] flex items-center justify-center p-4 md:p-12" onClick={() => setIsViewerOpen(false)}>
-                        <Image
-                            src={product.images[activeImage]}
-                            alt={product.name}
-                            fill
-                            className="object-contain cursor-zoom-out"
-                            quality={100}
-                            priority
-                        />
+                    <div className="relative h-[82vh] w-full max-w-6xl" onClick={(event) => event.stopPropagation()}>
+                        <Image src={mainImage} alt={product.name} fill priority quality={100} sizes="100vw" className="object-contain" />
                     </div>
-
                     {product.images.length > 1 && (
                         <>
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                                className="absolute left-6 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-[#13ec5b] text-white shadow-xl backdrop-blur-md p-4 rounded-full transition-all border border-white/10"
-                            >
-                                <ChevronLeft className="h-8 w-8" />
-                            </button>
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                                className="absolute right-6 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-[#13ec5b] text-white shadow-xl backdrop-blur-md p-4 rounded-full transition-all border border-white/10"
-                            >
-                                <ChevronRight className="h-8 w-8" />
-                            </button>
-                            
-                            {/* Thumbnails en el modal */}
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 px-6 py-4 bg-black/50 backdrop-blur-md rounded-2xl border border-white/10 max-w-full overflow-x-auto">
-                                {product.images.map((url, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={(e) => { e.stopPropagation(); setActiveImage(idx); }}
-                                        className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
-                                            activeImage === idx 
-                                            ? 'border-[#13ec5b] scale-110 shadow-lg shadow-[#13ec5b]/20' 
-                                            : 'border-transparent opacity-50 hover:opacity-100'
-                                        }`}
-                                    >
-                                        <Image src={url} alt={`Thumb ${idx}`} fill className="object-cover" />
-                                    </button>
-                                ))}
-                            </div>
+                            <button type="button" onClick={(event) => { event.stopPropagation(); previousImage() }} aria-label="Imagen anterior" className="absolute left-5 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/14 bg-black/40 text-white transition hover:bg-[#13ec5b] hover:text-[#07110a]"><ChevronLeft size={23} /></button>
+                            <button type="button" onClick={(event) => { event.stopPropagation(); nextImage() }} aria-label="Imagen siguiente" className="absolute right-5 top-1/2 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/14 bg-black/40 text-white transition hover:bg-[#13ec5b] hover:text-[#07110a]"><ChevronRight size={23} /></button>
                         </>
                     )}
                 </div>
