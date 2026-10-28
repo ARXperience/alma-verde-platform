@@ -27,6 +27,12 @@ function projectLayout(index: number, featured: boolean) {
     return 'aspect-[4/5]'
 }
 
+// First plain paragraph of a description, skipping "## Título" headings and "Clave: valor" sheet lines
+function excerpt(description: string) {
+    return description.split('\n').map((line) => line.trim())
+        .find((line) => line && !line.startsWith('## ') && !/^[^:.]{2,30}:\s/.test(line)) || ''
+}
+
 export default function PortafolioPage() {
     const [activeFilter, setActiveFilter] = useState('Todos')
     const [projects, setProjects] = useState<PortfolioProject[]>([])
@@ -146,7 +152,7 @@ export default function PortafolioPage() {
                                         </span>
                                         <h2 className="text-2xl font-bold leading-tight tracking-[-0.035em] text-white md:text-3xl">{project.title}</h2>
                                         {project.description && (
-                                            <p className="mt-3 line-clamp-2 max-w-lg text-sm leading-6 text-white/62">{project.description}</p>
+                                            <p className="mt-3 line-clamp-2 max-w-lg text-sm leading-6 text-white/62">{excerpt(project.description)}</p>
                                         )}
                                     </div>
                                     <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#13ec5b] text-[#07110a] transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1">
