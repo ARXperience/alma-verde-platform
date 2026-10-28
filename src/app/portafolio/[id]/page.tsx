@@ -99,14 +99,11 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ id: 
         return (
             <main className="min-h-screen bg-[#f1f4ef] text-[#0b130e] font-display">
                 <Header />
-                <section className="bg-[#09110c]">
-                    <div className="mx-auto grid max-w-[1500px] animate-pulse items-center gap-12 px-6 py-20 md:px-10 lg:grid-cols-12 lg:px-16 lg:py-28">
-                        <div className="space-y-6 lg:col-span-5">
-                            <div className="h-3 w-40 rounded bg-white/10" />
-                            <div className="h-16 w-full rounded bg-white/10" />
-                            <div className="h-16 w-2/3 rounded bg-white/10" />
-                        </div>
-                        <div className="aspect-[4/3] rounded-[28px] bg-white/10 lg:col-span-7" />
+                <section className="flex min-h-[540px] items-end bg-[#09110c] md:min-h-[640px] lg:h-[82vh] lg:max-h-[880px]">
+                    <div className="mx-auto w-full max-w-[1500px] animate-pulse space-y-6 px-6 pb-16 md:px-10 lg:px-16">
+                        <div className="h-3 w-40 rounded bg-white/10" />
+                        <div className="h-20 w-3/4 rounded bg-white/10" />
+                        <div className="h-px w-full bg-white/10" />
                     </div>
                 </section>
                 <Footer />
@@ -165,62 +162,55 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ id: 
         <main className="min-h-screen bg-[#f1f4ef] text-[#0b130e] font-display">
             <Header />
 
-            {/* Hero: blurred backdrop + uncropped cover, so small or portrait images still look sharp */}
-            <section className="relative isolate overflow-hidden bg-[#09110c] text-white" data-assistant-section="case-study">
+            {/* Hero: the project's best photo across the full width, title over a dark gradient */}
+            <section className="relative isolate flex min-h-[540px] items-end overflow-hidden bg-[#09110c] text-white md:min-h-[640px] lg:h-[82vh] lg:max-h-[880px]" data-assistant-section="case-study">
                 <img
                     src={cover}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover opacity-30 blur-3xl"
+                    alt={project.title}
+                    className="absolute inset-0 -z-20 h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_82%_18%,rgba(19,236,91,0.18),transparent_27%),linear-gradient(90deg,#09110c_30%,rgba(9,17,12,0.75))]" />
+                <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#09110c] via-[#09110c]/50 to-[#09110c]/5" />
+                <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#09110c]/75 via-[#09110c]/20 to-transparent" />
 
-                <div className="mx-auto grid max-w-[1500px] items-center gap-12 px-6 py-16 md:px-10 lg:grid-cols-12 lg:gap-16 lg:px-16 lg:py-24">
-                    <div className="order-2 lg:order-1 lg:col-span-5">
-                        <Link href="/portafolio" className="mb-10 inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-[#13ec5b]">
+                <div className="mx-auto w-full max-w-[1500px] px-6 pb-12 pt-24 md:px-10 md:pb-16 lg:px-16">
+                    <div>
+                        <Link href="/portafolio" className="mb-8 inline-flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-[#13ec5b]">
                             <ArrowLeft size={16} /> Portafolio
                         </Link>
                         <Eyebrow className="mb-6">{category}</Eyebrow>
-                        <h1 className="text-[clamp(2.6rem,5vw,4.75rem)] font-black leading-[0.92] tracking-[-0.055em]">
+                        <h1 className="max-w-5xl text-[clamp(2.6rem,6vw,6rem)] font-black leading-[0.9] tracking-[-0.055em]">
                             {project.title}
                         </h1>
-                        <dl className="mt-10 grid grid-cols-2 gap-6 border-t border-white/12 pt-7 sm:grid-cols-3">
-                            {client && (
-                                <div>
-                                    <dt className="text-[10px] uppercase tracking-[0.2em] text-white/45">Cliente</dt>
-                                    <dd className="mt-1.5 font-bold">{client}</dd>
-                                </div>
+                        <div className="mt-10 flex flex-wrap items-end justify-between gap-6 border-t border-white/15 pt-7">
+                            <dl className="flex flex-wrap gap-x-12 gap-y-4">
+                                {client && (
+                                    <div>
+                                        <dt className="text-[10px] uppercase tracking-[0.2em] text-white/45">Cliente</dt>
+                                        <dd className="mt-1.5 font-bold">{client}</dd>
+                                    </div>
+                                )}
+                                {date && (
+                                    <div>
+                                        <dt className="text-[10px] uppercase tracking-[0.2em] text-white/45">Fecha</dt>
+                                        <dd className="mt-1.5 font-bold">{date}</dd>
+                                    </div>
+                                )}
+                                {allImages.length > 1 && (
+                                    <div>
+                                        <dt className="text-[10px] uppercase tracking-[0.2em] text-white/45">Galería</dt>
+                                        <dd className="mt-1.5 font-bold">{allImages.length} fotos</dd>
+                                    </div>
+                                )}
+                            </dl>
+                            {allImages.length > 0 && (
+                                <button
+                                    onClick={() => setLightboxIndex(0)}
+                                    className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-3 text-sm font-bold backdrop-blur-md transition-colors hover:bg-[#13ec5b] hover:text-[#07110a]"
+                                >
+                                    <ZoomIn size={18} /> {allImages.length > 1 ? 'Ver galería' : 'Ver foto'}
+                                </button>
                             )}
-                            {date && (
-                                <div>
-                                    <dt className="text-[10px] uppercase tracking-[0.2em] text-white/45">Fecha</dt>
-                                    <dd className="mt-1.5 font-bold">{date}</dd>
-                                </div>
-                            )}
-                            {allImages.length > 1 && (
-                                <div>
-                                    <dt className="text-[10px] uppercase tracking-[0.2em] text-white/45">Galería</dt>
-                                    <dd className="mt-1.5 font-bold">{allImages.length} fotos</dd>
-                                </div>
-                            )}
-                        </dl>
-                    </div>
-
-                    <div className="order-1 flex justify-center lg:order-2 lg:col-span-7 lg:justify-end">
-                        <button
-                            onClick={() => allImages.length && setLightboxIndex(0)}
-                            aria-label="Ampliar imagen principal"
-                            className="group relative cursor-zoom-in overflow-hidden rounded-[28px] shadow-2xl shadow-black/50 ring-1 ring-white/10"
-                        >
-                            <img
-                                src={cover}
-                                alt={project.title}
-                                className="block h-auto max-h-[72vh] w-auto max-w-full object-contain transition duration-700 ease-out group-hover:scale-[1.02]"
-                            />
-                            <span className="absolute bottom-5 right-5 grid h-12 w-12 place-items-center rounded-full bg-[#13ec5b] text-[#07110a] opacity-0 transition-opacity group-hover:opacity-100">
-                                <ZoomIn size={20} />
-                            </span>
-                        </button>
+                        </div>
                     </div>
                 </div>
             </section>
