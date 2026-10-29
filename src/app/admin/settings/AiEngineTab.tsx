@@ -128,7 +128,7 @@ export function AiEngineTab() {
                     <CardTitle className="flex items-center gap-2"><Cpu className="w-5 h-5" /> Motor de IA por función</CardTitle>
                     <CardDescription>
                         Elige qué IA usa cada paso de la cotización en /cotizar. Si el proveedor elegido falla
-                        (por ejemplo, el PC está apagado), se usa automáticamente Gemini o Pollinations.
+                        (por ejemplo, el PC está apagado), se usa automáticamente Gemini.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="divide-y divide-slate-100">

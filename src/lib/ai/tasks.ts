@@ -14,5 +14,5 @@ export const TASKS: { id: AiTask; label: string; description: string; providers:
     { id: 'extract', label: 'Extracción de variables', description: 'Lee el brief y saca tipo, m², materiales, ciudad…', providers: ['gemini', 'openai', 'local'] },
     { id: 'reasoning', label: 'Cotización (modelo de pensamiento)', description: 'Razona el desglose de costos y el precio final.', providers: ['gemini', 'openai', 'local'] },
     { id: 'chat', label: 'Asistente de chat', description: 'Chat de la web y del cotizador.', providers: ['gemini', 'openai', 'local'] },
-    { id: 'image', label: 'Generación de imágenes', description: 'Render conceptual del proyecto.', providers: ['pollinations', 'gemini', 'openai', 'local'] },
+    { id: 'image', label: 'Generación de imágenes', description: 'Render conceptual del proyecto.', providers: ['gemini', 'local', 'openai', 'pollinations'] },
 ]

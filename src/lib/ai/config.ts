@@ -19,7 +19,8 @@ export const DEFAULT_CONFIG: AiConfig = {
         extract: { provider: 'gemini', model: 'gemini-2.5-flash' },
         reasoning: { provider: 'gemini', model: 'gemini-3.1-pro-preview' },
         chat: { provider: 'gemini', model: 'gemini-2.5-flash' },
-        image: { provider: 'pollinations', model: 'flux' },
+        // Pollinations' free API is often at its limit (503), so the default/fallback is Gemini
+        image: { provider: 'gemini', model: 'gemini-3.1-flash-image' },
     },
     keys: {},
     bridge: {},
