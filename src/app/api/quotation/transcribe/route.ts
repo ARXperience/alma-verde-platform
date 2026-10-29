@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
-import OpenAI from 'openai'
+import { aiTranscribe } from '@/lib/ai/engine'
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || 'DUMMY_KEY',
-})
+export const maxDuration = 120
 
 export async function POST(request: Request) {
     try {
@@ -24,22 +21,16 @@ export async function POST(request: Request) {
             size: file.size
         })
 
-        // Whisper transcription
-        const transcription = await openai.audio.transcriptions.create({
-            file: file,
-            model: 'whisper-1',
-            language: 'es', // Set language to Spanish explicitly or leave auto-detect
-        })
+        // Provider (Gemini / OpenAI Whisper) is chosen in Admin > Configuración > Motor de IA
+        const text = await aiTranscribe(file)
 
-        console.log('✅ Transcription successful:', transcription.text.substring(0, 50) + '...')
+        console.log('✅ Transcription successful:', text.substring(0, 50) + '...')
 
-        return NextResponse.json({
-            text: transcription.text
-        })
-    } catch (error: any) {
+        return NextResponse.json({ text })
+    } catch (error) {
         console.error('❌ Error transcribing audio:', error)
         return NextResponse.json(
-            { error: 'Failed to transcribe audio', details: error.message },
+            { error: 'Failed to transcribe audio', details: error instanceof Error ? error.message : String(error) },
             { status: 500 }
         )
     }

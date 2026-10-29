@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { chat } from '@/lib/gemini/client'
+import { aiChat, type ChatMessage } from '@/lib/ai/engine'
 import { buildPrompt, CHAT_ASSISTANT_PROMPT } from '@/lib/gemini/prompts'
 
 export async function POST(request: NextRequest) {
@@ -18,14 +18,15 @@ export async function POST(request: NextRequest) {
             project_context: project_context || 'Nuevo proyecto sin información previa',
         })
 
-        // Prepend system message
-        const fullMessages = [
+        const fullMessages: ChatMessage[] = [
             { role: 'system', content: systemPrompt },
-            ...messages,
+            ...messages.map((m: { role: string; content: string }) => ({
+                role: m.role === 'user' ? 'user' as const : 'assistant' as const,
+                content: String(m.content),
+            })),
         ]
 
-        // Get response from Gemini
-        const response = await chat(fullMessages)
+        const response = await aiChat('chat', fullMessages)
 
         return NextResponse.json({ response })
     } catch (error) {

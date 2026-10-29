@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateJSON } from '@/lib/gemini/client'
+import { aiJSON } from '@/lib/ai/engine'
 import type { QuotationVariables } from '@/types/quotation'
 
 export async function POST(request: NextRequest) {
@@ -34,7 +34,7 @@ If specific values are missing, infer reasonable defaults based on the project t
 Briefing:
 "${briefing}"`;
 
-        const variables = await generateJSON<QuotationVariables>(prompt);
+        const variables = await aiJSON<QuotationVariables>('extract', prompt);
 
         return NextResponse.json({ variables })
     } catch (error: any) {

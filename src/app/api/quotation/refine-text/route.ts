@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { generateText } from '@/lib/gemini/client'
+import { aiText } from '@/lib/ai/engine'
 
 export async function POST(request: Request) {
     try {
@@ -23,7 +23,7 @@ Input Text: "${text}"
 
 Output ONLY the refined text.`;
 
-        const refinedText = await generateText(prompt);
+        const refinedText = await aiText('refine', prompt);
 
         return NextResponse.json({ text: refinedText })
     } catch (error: any) {

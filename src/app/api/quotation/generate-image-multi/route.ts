@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 
 import { createAdminClient } from '@/lib/supabase/server'
+import { aiImage } from '@/lib/ai/engine'
+
+export const maxDuration = 300
 
 // Robust UUID generator fallback
 function generateUUID() {
@@ -20,7 +23,7 @@ export async function POST(request: Request) {
         // Use Admin Client to bypass RLS for storage upload
         const supabase = await createAdminClient()
 
-        console.log(`[GenerateImage] Starting for project: ${projectId}, Provider: DALL-E`)
+        console.log(`[GenerateImage] Starting for project: ${projectId}, `)
 
         if (!projectId) {
             return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
@@ -48,27 +51,19 @@ export async function POST(request: Request) {
             imagePrompt += `. Note: ${instructions}`
         }
 
-        console.log('[GenerateImage] Generating with Pollinations AI...')
+        // Provider (Pollinations / Gemini / OpenAI / ComfyUI on the office PC) is chosen in Admin > Motor de IA
+        const image = await aiImage(imagePrompt)
+        const imageBuffer = image.buffer
+        console.log(`[GenerateImage] Image generated with ${image.provider}/${image.model}, size:`, imageBuffer.byteLength)
 
-        // Generate with Pollinations AI (Free, no API key needed)
-        console.log('[GenerateImage] Requesting image from Pollinations...')
-        const dalleUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?width=1792&height=1024&nologo=true`
-        console.log('[GenerateImage] Pollinations URL generated:', dalleUrl)
-
-        // PERSISTENCE: Download image and upload to Supabase Storage
-        console.log('[GenerateImage] Downloading from Pollinations...')
-        const imageRes = await fetch(dalleUrl)
-        if (!imageRes.ok) throw new Error(`Failed to download image from Pollinations: ${imageRes.statusText}`)
-        const imageBuffer = await imageRes.arrayBuffer()
-        console.log('[GenerateImage] Image downloaded, buffer size:', imageBuffer.byteLength)
-
-        const fileName = `${projectId}/${Date.now()}-render.png`
+        const extension = image.mime.includes('jpeg') ? 'jpg' : image.mime.includes('webp') ? 'webp' : 'png'
+        const fileName = `${projectId}/${Date.now()}-render.${extension}`
         console.log('[GenerateImage] Uploading to Storage:', fileName)
 
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from('project-renders')
             .upload(fileName, imageBuffer, {
-                contentType: 'image/png',
+                contentType: image.mime,
                 upsert: false
             })
 
@@ -113,7 +108,7 @@ export async function POST(request: Request) {
                     version: nextVersion,
                     is_selected: true,
                     // status: 'completed' 
-                    metadata: { provider: 'dall-e-3', original_url: dalleUrl }
+                    metadata: { provider: image.provider, model: image.model }
                 })
 
             if (saveError) {
@@ -139,7 +134,7 @@ export async function POST(request: Request) {
                             {
                                 url: publicUrl,
                                 prompt: imagePrompt,
-                                provider: 'dall-e-3',
+                                provider: image.provider,
                                 created_at: new Date().toISOString(),
                                 version: nextVersion
                             }
@@ -161,7 +156,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             images: [{
-                provider: 'dall-e-3',
+                provider: image.provider,
                 url: publicUrl,
                 prompt: imagePrompt
             }],

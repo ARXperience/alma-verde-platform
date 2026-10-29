@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateJSON } from '@/lib/gemini/client'
+import { aiJSON } from '@/lib/ai/engine'
 import { buildPrompt, CALCULATE_PRICING_PROMPT } from '@/lib/gemini/prompts'
 import type { PricingBreakdown, QuotationVariables } from '@/types/quotation'
+
+// Thinking models can take a while to reason the cost breakdown
+export const maxDuration = 300
 
 export async function POST(request: NextRequest) {
     try {
@@ -20,7 +23,7 @@ export async function POST(request: NextRequest) {
         })
 
         // Calculate pricing using Gemini
-        const pricing = await generateJSON<PricingBreakdown>(prompt)
+        const pricing = await aiJSON<PricingBreakdown>('reasoning', prompt)
 
         return NextResponse.json({ pricing })
     } catch (error) {

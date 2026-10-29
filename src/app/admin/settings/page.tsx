@@ -8,16 +8,18 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import {
     Settings, Building, MessageCircle, Key, Bell, Loader2,
-    CheckCircle, XCircle, QrCode, Wifi, WifiOff, Save, Eye, EyeOff
+    CheckCircle, XCircle, QrCode, Wifi, WifiOff, Save, Eye, EyeOff, Cpu
 } from 'lucide-react'
+import { AiEngineTab } from './AiEngineTab'
 
-type Tab = 'general' | 'whatsapp' | 'integrations' | 'notifications'
+type Tab = 'general' | 'ai' | 'whatsapp' | 'integrations' | 'notifications'
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState<Tab>('general')
 
     const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
         { id: 'general', label: 'General', icon: <Building className="w-4 h-4" /> },
+        { id: 'ai', label: 'Motor de IA', icon: <Cpu className="w-4 h-4" /> },
         { id: 'whatsapp', label: 'WhatsApp Bot', icon: <MessageCircle className="w-4 h-4" /> },
         { id: 'integrations', label: 'Integraciones', icon: <Key className="w-4 h-4" /> },
         { id: 'notifications', label: 'Notificaciones', icon: <Bell className="w-4 h-4" /> },
@@ -53,6 +55,7 @@ export default function SettingsPage() {
 
             {/* Tab content */}
             {activeTab === 'general' && <GeneralTab />}
+            {activeTab === 'ai' && <AiEngineTab />}
             {activeTab === 'whatsapp' && <WhatsAppTab />}
             {activeTab === 'integrations' && <IntegrationsTab />}
             {activeTab === 'notifications' && <NotificationsTab />}
