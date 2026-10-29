@@ -1,178 +1,212 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2, Search, Eye, Filter } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { ChevronRight, Columns3, List, Loader2, Search, Sparkles } from 'lucide-react'
+import { PageHeader, ProjectThumb, StatusBadge } from '@/components/admin/ui'
+import { PROJECT_STEPS, formatCOP, formatDate, projectName, statusLabel, timeAgo } from '@/lib/projects/display'
 
+interface Project {
+    id: string
+    title: string
+    project_number: string | null
+    project_type: string
+    status: string
+    estimated_cost: number
+    created_at: string
+    extracted_variables: { project_type?: string; square_meters?: number; location?: string } | null
+    metadata: { render_image?: string } | null
+    client: { full_name: string | null; email: string } | null
+}
+
+const ALL_STATUSES = [...PROJECT_STEPS.map(s => s.id), 'cancelado'] as string[]
+
+// useSearchParams needs a Suspense boundary in a statically rendered page
 export default function AdminProjectsPage() {
-    const [projects, setProjects] = useState<any[]>([])
+    return (
+        <Suspense>
+            <ProjectsView />
+        </Suspense>
+    )
+}
+
+function ProjectsView() {
+    // Deep links from the dashboard: /admin/projects?status=cotizacion opens that stage as a list
+    const linkedStatus = useSearchParams().get('status')
+    const initialStatus = linkedStatus && ALL_STATUSES.includes(linkedStatus) ? linkedStatus : 'all'
+    const [projects, setProjects] = useState<Project[]>([])
     const [loading, setLoading] = useState(true)
-    const [searchTerm, setSearchTerm] = useState('')
-    const [statusFilter, setStatusFilter] = useState('ALL')
-    const router = useRouter()
+    const [search, setSearch] = useState('')
+    const [statusFilter, setStatusFilter] = useState(initialStatus)
+    const [view, setView] = useState<'board' | 'list'>(initialStatus === 'all' ? 'board' : 'list')
+    const [moving, setMoving] = useState<string | null>(null)
 
     useEffect(() => {
-        fetchProjects()
-    }, [statusFilter])
+        supabase.from('projects')
+            .select('id, title, project_number, project_type, status, estimated_cost, created_at, extracted_variables, metadata, client:users!projects_client_id_fkey(full_name, email)')
+            .order('created_at', { ascending: false })
+            .then(({ data, error }) => {
+                if (error) console.error('Error fetching projects:', error)
+                setProjects((data || []) as unknown as Project[])
+                setLoading(false)
+            })
+    }, [])
 
-    async function fetchProjects() {
-        try {
-            setLoading(true)
-            let query = supabase
-                .from('projects')
-                .select('*, user:users!projects_client_id_fkey(full_name, email)') // Fetch related user info if relation exists
-                // Note: 'user:users(...)' syntax depends on FK name. Usually 'users(name)' works if relation is detected.
-                .order('created_at', { ascending: false })
-
-            if (statusFilter !== 'ALL') {
-                query = query.eq('status', statusFilter)
-            }
-
-            const { data, error } = await query
-
-            if (error) throw error
-            setProjects(data as any || [])
-        } catch (error: any) {
-            // Ignore AbortError often caused by navigation
-            if (error?.message?.includes('AbortError') || error?.name === 'AbortError') {
-                return
-            }
-            console.error('Error fetching projects:', JSON.stringify(error, null, 2))
-        } finally {
-            setLoading(false)
-        }
+    async function moveTo(project: Project, status: string) {
+        setMoving(project.id)
+        const { error } = await (supabase.from('projects') as any).update({ status }).eq('id', project.id)
+        if (error) alert('No se pudo cambiar el estado: ' + error.message)
+        else setProjects(list => list.map(p => (p.id === project.id ? { ...p, status } : p)))
+        setMoving(null)
     }
 
-    const filteredProjects = projects.filter(project =>
-        project.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.user?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    const term = search.trim().toLowerCase()
+    const matches = projects.filter(p =>
+        !term ||
+        [projectName(p), p.project_number, p.client?.full_name, p.client?.email, p.extracted_variables?.location]
+            .some(v => v?.toLowerCase().includes(term))
     )
-
-    function formatCurrency(amount: number) {
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0,
-        }).format(amount)
-    }
+    const visible = statusFilter === 'all' ? matches : matches.filter(p => p.status === statusFilter)
+    const count = (status: string) => matches.filter(p => p.status === status).length
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-4xl font-black text-[#102216] tracking-tight">Gestión de Proyectos</h1>
+        <div className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
+            <PageHeader
+                eyebrow="Ventas"
+                title="Proyectos"
+                description="Cotizaciones del cotizador IA y proyectos en marcha"
+                actions={
+                    <div className="flex rounded-xl bg-white p-1 shadow-sm">
+                        {([['board', Columns3, 'Tablero'], ['list', List, 'Lista']] as const).map(([id, Icon, label]) => (
+                            <button
+                                key={id}
+                                onClick={() => setView(id)}
+                                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${view === id ? 'bg-[#102216] text-white' : 'text-slate-500 hover:text-[#102216]'}`}
+                            >
+                                <Icon className="h-4 w-4" /> {label}
+                            </button>
+                        ))}
+                    </div>
+                }
+            />
+
+            {/* Toolbar */}
+            <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+                <div className="relative lg:w-80">
+                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Buscar proyecto, cliente o ciudad…"
+                        className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm focus:border-[#13ec5b] focus:outline-none focus:ring-2 focus:ring-[#13ec5b]/20"
+                    />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <Chip active={statusFilter === 'all'} onClick={() => setStatusFilter('all')} label="Todos" count={matches.length} />
+                    {ALL_STATUSES.map(status => (
+                        <Chip key={status} active={statusFilter === status} onClick={() => setStatusFilter(status)} label={statusLabel(status)} count={count(status)} />
+                    ))}
+                </div>
             </div>
 
-            <Card className="mb-8 border-none shadow-sm rounded-3xl bg-white">
-                <CardContent className="p-6 flex flex-col md:flex-row gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                        <Input
-                            placeholder="Buscar por nombre o cliente..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-12 h-12 rounded-xl border-slate-200 focus-visible:ring-[#13ec5b] focus-visible:border-[#13ec5b] bg-slate-50 text-base"
-                        />
-                    </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full md:w-[250px] h-12 rounded-xl border-slate-200 focus:ring-[#13ec5b] bg-slate-50">
-                            <Filter className="w-4 h-4 mr-2" />
-                            <SelectValue placeholder="Filtrar por estado" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-slate-100 shadow-xl">
-                            <SelectItem value="ALL">Todos los estados</SelectItem>
-                            <SelectItem value="cotizacion">Cotización</SelectItem>
-                            <SelectItem value="pending">Pendiente de Aprobación</SelectItem>
-                            <SelectItem value="approved">Aprobado</SelectItem>
-                            <SelectItem value="in_production">En Producción</SelectItem>
-                            <SelectItem value="completed">Finalizado</SelectItem>
-                            <SelectItem value="cancelled">Cancelado</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </CardContent>
-            </Card>
-
-            <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-                <CardContent className="p-0">
-                    {loading ? (
-                        <div className="p-16 flex justify-center">
-                            <Loader2 className="h-10 w-10 animate-spin text-[#13ec5b]" />
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b border-slate-100 text-left bg-slate-50">
-                                        <th className="py-4 px-8 font-bold text-slate-600 text-sm">Proyecto / ID</th>
-                                        <th className="py-4 px-8 font-bold text-slate-600 text-sm">Cliente</th>
-                                        <th className="py-4 px-8 font-bold text-slate-600 text-sm">Estado</th>
-                                        <th className="py-4 px-8 font-bold text-slate-600 text-sm">Presupuesto</th>
-                                        <th className="py-4 px-8 font-bold text-slate-600 text-sm">Fecha</th>
-                                        <th className="py-4 px-8 font-bold text-slate-600 text-sm text-right">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredProjects.map((project) => (
-                                        <tr key={project.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/80 transition-colors group">
-                                            <td className="py-5 px-8">
-                                                <div className="font-bold text-[#102216]">{project.title}</div>
-                                                <div className="text-xs text-slate-500 font-mono mt-0.5">{project.id.substring(0, 8)}...</div>
-                                            </td>
-                                            <td className="py-5 px-8">
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium text-slate-700">{project.user?.full_name || 'Sin Asignar'}</span>
-                                                    <span className="text-xs text-slate-500">{project.user?.email}</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-5 px-8">
-                                                <Badge className={`px-3 py-1.5 rounded-lg border text-xs font-bold shadow-sm inline-flex items-center ${
-                                                    project.status === 'approved' ? 'bg-[#13ec5b]/10 text-[#0a8c35] border-[#13ec5b]/30' :
-                                                    project.status === 'in_production' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                                    project.status === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                                    project.status === 'completed' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                    project.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-200' :
-                                                    'bg-slate-50 text-slate-700 border-slate-200'
-                                                }`}>
-                                                    <span className={`w-1.5 h-1.5 rounded-full mr-2 ${project.status === 'approved' ? 'bg-[#13ec5b]' : 'bg-current opacity-60'}`}></span>
-                                                    {project.status === 'cotizacion' ? 'Cotización' : project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                                                </Badge>
-                                            </td>
-                                            <td className="py-5 px-8 font-medium text-slate-700">
-                                                {formatCurrency(project.budget || project.estimated_cost || 0)}
-                                            </td>
-                                            <td className="py-5 px-8 text-sm text-slate-500">
-                                                {new Date(project.created_at).toLocaleDateString('es-CO')}
-                                            </td>
-                                            <td className="py-5 px-8 text-right">
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    onClick={() => router.push(`/admin/projects/${project.id}`)}
-                                                    className="rounded-xl h-9 px-4 border-slate-200 text-slate-600 hover:bg-[#13ec5b]/10 hover:text-[#0a8c35] hover:border-[#13ec5b]/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center ml-auto"
-                                                >
-                                                    <Eye className="w-4 h-4 mr-2" />
-                                                    Detalles
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {filteredProjects.length === 0 && !loading && (
-                                        <tr>
-                                            <td colSpan={6} className="py-16 text-center text-slate-500 italic">No se encontraron proyectos.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+            {loading ? (
+                <div className="flex justify-center p-16"><Loader2 className="h-8 w-8 animate-spin text-[#13ec5b]" /></div>
+            ) : projects.length === 0 ? (
+                <div className="rounded-3xl bg-white p-16 text-center shadow-sm">
+                    <Sparkles className="mx-auto mb-4 h-10 w-10 text-[#13ec5b]" />
+                    <p className="font-bold text-[#102216]">Aún no hay proyectos</p>
+                    <p className="text-sm text-slate-500">Las cotizaciones del cotizador IA aparecerán aquí.</p>
+                </div>
+            ) : view === 'board' ? (
+                <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+                    {(statusFilter === 'all' ? PROJECT_STEPS.map(s => s.id) : [statusFilter]).map(status => {
+                        const column = visible.filter(p => p.status === status)
+                        const step = PROJECT_STEPS.find(s => s.id === status)
+                        return (
+                            <section key={status} className="flex w-72 flex-none flex-col rounded-3xl bg-slate-100/80 p-3">
+                                <header className="mb-3 flex items-center justify-between px-2 pt-1">
+                                    <span className="flex items-center gap-2 text-sm font-bold text-[#102216]">
+                                        <span className={`h-2.5 w-2.5 rounded-full ${step?.dot || 'bg-red-400'}`} />
+                                        {statusLabel(status)}
+                                        <span className="font-semibold text-slate-400">{column.length}</span>
+                                    </span>
+                                    <span className="text-xs font-semibold text-slate-500">{formatCOP(column.reduce((s, p) => s + (p.estimated_cost || 0), 0))}</span>
+                                </header>
+                                <div className="space-y-3">
+                                    {column.map(p => <BoardCard key={p.id} project={p} moving={moving === p.id} onMove={moveTo} />)}
+                                    {column.length === 0 && <p className="rounded-2xl border-2 border-dashed border-slate-200 p-6 text-center text-xs text-slate-400">Sin proyectos</p>}
+                                </div>
+                            </section>
+                        )
+                    })}
+                </div>
+            ) : (
+                <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+                    {visible.length === 0 && <p className="p-12 text-center text-slate-500">No se encontraron proyectos.</p>}
+                    {visible.map(p => (
+                        <Link key={p.id} href={`/admin/projects/${p.id}`} className="flex items-center gap-4 border-b border-slate-100 p-4 transition-colors last:border-0 hover:bg-slate-50">
+                            <ProjectThumb src={p.metadata?.render_image} alt={projectName(p)} className="h-14 w-20 flex-none rounded-xl" />
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate font-bold text-[#102216]">{projectName(p)}</p>
+                                <p className="truncate text-sm text-slate-500">
+                                    {p.client?.full_name || p.client?.email || 'Sin cliente'}
+                                    {p.extracted_variables?.location ? ` · ${p.extracted_variables.location}` : ''}
+                                </p>
+                            </div>
+                            <div className="hidden w-32 md:block"><StatusBadge status={p.status} /></div>
+                            <p className="hidden w-36 text-right font-black text-[#102216] sm:block">{formatCOP(p.estimated_cost)}</p>
+                            <div className="hidden w-32 text-right text-sm text-slate-500 lg:block">
+                                <p>{formatDate(p.created_at)}</p>
+                                {p.project_number && <p className="font-mono text-xs text-slate-400">{p.project_number}</p>}
+                            </div>
+                            <ChevronRight className="h-5 w-5 flex-none text-slate-300" />
+                        </Link>
+                    ))}
+                </div>
+            )}
         </div>
+    )
+}
+
+function BoardCard({ project, moving, onMove }: { project: Project; moving: boolean; onMove: (p: Project, status: string) => void }) {
+    return (
+        <article className="group overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md">
+            <Link href={`/admin/projects/${project.id}`} className="block">
+                <div className="relative aspect-video overflow-hidden">
+                    <ProjectThumb src={project.metadata?.render_image} alt={projectName(project)} className="h-full w-full transition-transform duration-700 group-hover:scale-105" />
+                    <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">{timeAgo(project.created_at)}</span>
+                </div>
+                <div className="p-3 pb-2">
+                    <p className="truncate font-bold text-[#102216]">{projectName(project)}</p>
+                    <p className="truncate text-xs text-slate-500">{project.client?.full_name || project.client?.email || 'Sin cliente'}</p>
+                    <p className="mt-2 font-black text-[#0a8c35]">{formatCOP(project.estimated_cost)}</p>
+                </div>
+            </Link>
+            <div className="flex items-center gap-2 px-3 pb-3">
+                <select
+                    value={project.status}
+                    disabled={moving}
+                    onChange={(e) => onMove(project, e.target.value)}
+                    aria-label="Mover a otra etapa"
+                    className="h-8 flex-1 cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-600 focus:border-[#13ec5b] focus:outline-none"
+                >
+                    {ALL_STATUSES.map(s => <option key={s} value={s}>{s === project.status ? statusLabel(s) : `Mover a: ${statusLabel(s)}`}</option>)}
+                </select>
+                {moving && <Loader2 className="h-4 w-4 animate-spin text-[#13ec5b]" />}
+            </div>
+        </article>
+    )
+}
+
+function Chip({ active, onClick, label, count }: { active: boolean; onClick: () => void; label: string; count: number }) {
+    return (
+        <button
+            onClick={onClick}
+            className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${active ? 'bg-[#102216] text-white' : 'bg-white text-slate-600 shadow-sm hover:text-[#102216]'}`}
+        >
+            {label} <span className={active ? 'text-[#13ec5b]' : 'text-slate-400'}>{count}</span>
+        </button>
     )
 }

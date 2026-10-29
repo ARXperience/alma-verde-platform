@@ -13,7 +13,7 @@ import {
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Search, Eye, Plus, FileText } from 'lucide-react'
+import { Loader2, Search, Eye, FileText } from 'lucide-react'
 
 interface Quotation {
     id: string
@@ -97,15 +97,8 @@ export default function QuotationsPage() {
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <h1 className="text-4xl font-black text-[#102216] tracking-tight">Cotizaciones</h1>
-                    <p className="text-slate-500 mt-1">Gestiona las cotizaciones del CRM</p>
+                    <p className="text-slate-500 mt-1">Cotizaciones creadas por WhatsApp y el equipo. Las del cotizador IA están en Proyectos.</p>
                 </div>
-                <Button
-                    className="bg-[#13ec5b] hover:bg-[#13ec5b]/90 text-[#102216] font-bold rounded-xl"
-                    onClick={() => router.push('/admin/quotations/new')}
-                >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nueva Cotización
-                </Button>
             </div>
 
             <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">

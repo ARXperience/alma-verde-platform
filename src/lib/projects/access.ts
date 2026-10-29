@@ -12,9 +12,9 @@ export async function projectAccess(projectId: string) {
     const admin = await createAdminClient()
     const { data: project } = await admin.from('projects').select('id, client_id, metadata').eq('id', projectId).maybeSingle()
     if (!project) return { error: NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 }) }
-    if (project.client_id === user.id) return { admin, project, staff: false }
+    if (project.client_id === user.id) return { admin, project, user, staff: false }
 
     const { data: profile } = await admin.from('users').select('role').eq('id', user.id).maybeSingle()
     if (!STAFF_ROLES.includes(profile?.role)) return { error: NextResponse.json({ error: 'No tienes acceso a este proyecto' }, { status: 403 }) }
-    return { admin, project, staff: true }
+    return { admin, project, user, staff: true }
 }

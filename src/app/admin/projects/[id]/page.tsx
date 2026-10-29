@@ -10,8 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { supabase } from '@/lib/supabase/client'
-import { Loader2, ArrowLeft, Save, Download, MessageSquare, Paperclip, Image as ImageIcon, Trash2, Upload, Send, User, Bot, FileText, RefreshCw, Globe, Star, X, Plus, Sparkles, DollarSign } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { Loader2, ArrowLeft, Save, Download, MessageSquare, Paperclip, Image as ImageIcon, Trash2, Upload, Send, FileText, Globe, Star, X, Plus, Sparkles, DollarSign, Mail, Phone, ExternalLink, Maximize2, Wand2, StickyNote } from 'lucide-react'
+import { Lightbox } from '@/components/ui/lightbox'
+import { StatusBadge } from '@/components/admin/ui'
+import { PROJECT_STEPS, projectName, timeAgo } from '@/lib/projects/display'
 
 // Interfaces
 interface ProjectFile {
@@ -23,17 +25,11 @@ interface ProjectFile {
     created_at: string
 }
 
-interface Message {
+interface Note {
     id: string
-    content: string
-    is_ai: boolean
-    is_internal: boolean
-    user_id: string
+    message: string
     created_at: string
-    user?: {
-        email: string
-        name: string
-    }
+    author: { full_name: string | null; email: string } | null
 }
 
 // Portfolio interfaces
@@ -53,10 +49,12 @@ interface PortfolioItem {
 const PORTFOLIO_CATEGORIES = ['Stands', 'Activaciones', 'Mobiliario', 'Producción gráfica']
 
 export default function AdminProjectDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-    const { user } = useAuth()
     const [project, setProject] = useState<any>(null)
     const [files, setFiles] = useState<ProjectFile[]>([])
-    const [messages, setMessages] = useState<Message[]>([])
+    const [messages, setMessages] = useState<Note[]>([])
+    const [renderNote, setRenderNote] = useState('')
+    const [generating, setGenerating] = useState(false)
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
     // Loading states
     const [loading, setLoading] = useState(true)
@@ -89,6 +87,7 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
     useEffect(() => {
         fetchProjectDetails()
         fetchPortfolioData()
+        fetch(`/api/projects/${id}/notes`).then(res => res.ok ? res.json() : { notes: [] }).then(data => setMessages(data.notes || []))
     }, [id])
 
     useEffect(() => {
@@ -235,16 +234,11 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
 
             if (error) throw error
             const data = rawData as any
-
-            // Sort messages by date
-            if (data.messages) {
-                data.messages.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-            }
+            data.renders?.sort((a: any, b: any) => (a.version || 0) - (b.version || 0))
 
             setProject(data)
             setStatus(data.status)
             setFiles(data.files || [])
-            setMessages(data.messages || [])
         } catch (error: any) {
             if (error?.message?.includes('AbortError') || error?.name === 'AbortError') return
             console.error('Error fetching project:', JSON.stringify(error, null, 2))
@@ -382,39 +376,17 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
         }
     }
 
-    async function handleSetMainRender(renderId: string, imageUrl: string) {
+    async function handleSetMainRender(imageUrl: string) {
         try {
             setUpdating(true)
-
-            // 1. Unset others
-            await (supabase
-                .from('project_renders') as any)
-                .update({ is_selected: false })
-                .eq('project_id', id)
-
-            // 2. Set new main
-            const { error } = await (supabase
-                .from('project_renders') as any)
-                .update({ is_selected: true })
-                .eq('id', renderId)
-
-            if (error) throw error
-
-            // 3. Update project metadata for dashboard preview
-            const currentMetadata = project.metadata || {}
-            await (supabase
-                .from('projects') as any)
-                .update({
-                    metadata: {
-                        ...currentMetadata,
-                        render_image: imageUrl
-                    }
-                })
-                .eq('id', id)
-
-            // Refresh
-            fetchProjectDetails()
-            alert('Render principal actualizado')
+            // Same route as the client area: updates is_selected and the cover in metadata
+            const res = await fetch(`/api/projects/${id}/renders`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageUrl }),
+            })
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error)
+            await fetchProjectDetails()
         } catch (error) {
             console.error('Error updating main render:', error)
             alert('Error al actualizar render principal')
@@ -446,69 +418,49 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
 
     async function handleRegenerate() {
         try {
-            setUpdating(true)
-
+            setGenerating(true)
             const response = await fetch('/api/quotation/generate-image-multi', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     projectId: id,
-                    prompt: newMessage || project.briefing, // Use message input as instruction or fallback
-                    provider: 'dalle'
-                })
+                    projectDetails: { project_type: project.project_type, ...project.extracted_variables, description: project.briefing || project.description },
+                    instructions: renderNote,
+                }),
             })
-
             if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || 'Error al regenerar imagen')
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.details || errorData.error || 'Error al generar la imagen')
             }
-
-            // Refresh
             await fetchProjectDetails()
-            setNewMessage('') // Clear input if used
-            alert('Imagen regenerada con éxito')
-
+            setRenderNote('')
         } catch (error: any) {
             console.error('Error regenerating image:', error)
-            alert(error.message || 'Error al regenerar imagen')
+            alert(error.message || 'Error al generar la imagen')
         } finally {
-            setUpdating(false)
+            setGenerating(false)
         }
     }
 
     async function handleSendMessage() {
-        if (!newMessage.trim() || !user) return
-
-        alert('El sistema de mensajes está temporalmente deshabilitado.')
-        return
-
-        /* 
+        if (!newMessage.trim()) return
         try {
             setSending(true)
-            const { data: msg, error } = await supabase
-                .from('messages')
-                .insert({
-                    project_id: id,
-                    user_id: user.id,
-                    content: newMessage,
-                    is_internal: false
-                })
-                .select('*, user:users(email, name)')
-                .single()
-
-            if (error) throw error
-
-            setMessages([...messages, msg])
+            const res = await fetch(`/api/projects/${id}/notes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: newMessage }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+            setMessages(notes => [...notes, data.note])
             setNewMessage('')
-        } catch (error) {
-            console.error('Error sending message:', error)
-            alert('Error al enviar mensaje')
+        } catch (error: any) {
+            console.error('Error saving note:', error)
+            alert(error.message || 'No se pudo guardar la nota')
         } finally {
             setSending(false)
         }
-        */
     }
 
     function formatCurrency(amount: number) {
@@ -527,54 +479,75 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
         )
     }
 
-    if (!project) return <div>Proyecto no encontrado</div>
+    if (!project) return <div className="p-8 text-slate-500">Proyecto no encontrado</div>
+
+    const renderUrls: string[] = (project.renders || []).map((r: any) => r.image_url)
+    const cover: string | undefined = project.metadata?.render_image || project.renders?.find((r: any) => r.is_selected)?.image_url || renderUrls[renderUrls.length - 1]
+    const stepIndex = PROJECT_STEPS.findIndex(s => s.id === project.status)
+    const phone = String(project.user?.phone || '').replace(/\D/g, '')
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
-            <Button variant="ghost" onClick={() => router.back()} className="mb-6 rounded-xl text-slate-600 hover:text-[#0a8c35] hover:bg-[#13ec5b]/10">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Volver
-            </Button>
+        <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+            <button onClick={() => router.push('/admin/projects')} className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition-colors hover:text-[#0a8c35]">
+                <ArrowLeft className="h-4 w-4" /> Proyectos
+            </button>
 
-            <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
-                <div>
-                    <h1 className="text-4xl font-black text-[#102216] tracking-tight mb-2">{project.title}</h1>
-                    <div className="flex items-center gap-2 text-slate-500 text-sm">
-                        <span className="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">{project.id.substring(0, 12)}...</span>
-                        <span>•</span>
-                        <span>{project.user?.full_name || project.user?.email}</span>
-                        <span>•</span>
-                        <span>{new Date(project.created_at).toLocaleDateString('es-CO')}</span>
+            {/* Hero: the main render is the proposal's face */}
+            <section className="relative overflow-hidden rounded-3xl bg-[#102216] text-white shadow-sm">
+                {cover && (
+                    <button onClick={() => setLightboxIndex(Math.max(renderUrls.indexOf(cover), 0))} className="absolute inset-0 cursor-zoom-in" aria-label="Ver render en grande">
+                        <img src={cover} alt="" className="h-full w-full object-cover" />
+                    </button>
+                )}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#102216] via-[#102216]/60 to-[#102216]/5" />
+                <div className="pointer-events-none relative flex min-h-[320px] flex-col justify-end gap-6 p-6 md:min-h-[380px] md:flex-row md:items-end md:justify-between md:p-8">
+                    <div className="pointer-events-auto max-w-2xl">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <StatusBadge status={project.status} />
+                            {project.project_number && <span className="rounded-full bg-white/10 px-2.5 py-1 font-mono text-xs backdrop-blur">{project.project_number}</span>}
+                            {project.metadata?.ai_generated && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-[#13ec5b]/20 px-2.5 py-1 text-xs font-bold text-[#13ec5b] backdrop-blur">
+                                    <Sparkles className="h-3 w-3" /> Cotizador IA
+                                </span>
+                            )}
+                        </div>
+                        <h1 className="mt-3 text-3xl font-black tracking-tight drop-shadow md:text-5xl">{projectName(project)}</h1>
+                        <p className="mt-2 text-white/70">
+                            {project.user?.full_name || project.user?.email || 'Sin cliente'} · creado {timeAgo(project.created_at)}
+                        </p>
                     </div>
-                </div>
-
-                <div className="flex items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border-none">
-                    <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Estado Actual</span>
-                        <div className="flex items-center gap-2">
+                    <div className="pointer-events-auto flex flex-col gap-3 md:items-end">
+                        <p className="text-3xl font-black text-[#13ec5b] drop-shadow md:text-4xl">{formatCurrency(project.estimated_cost || 0)}</p>
+                        <div className="flex items-center gap-2 rounded-2xl bg-white/10 p-2 backdrop-blur-md">
                             <Select value={status} onValueChange={setStatus}>
-                                <SelectTrigger className="w-[200px] rounded-xl border-slate-200 focus:ring-[#13ec5b]">
+                                <SelectTrigger className="h-10 w-[190px] rounded-xl border-0 bg-white text-[#102216] focus:ring-[#13ec5b]">
                                     <SelectValue placeholder="Seleccionar estado" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-xl shadow-xl border-slate-100">
-                                    <SelectItem value="cotizacion">Cotización</SelectItem>
-                                    <SelectItem value="aprobado">Aprobado</SelectItem>
-                                    <SelectItem value="en_diseno">En Diseño</SelectItem>
-                                    <SelectItem value="en_produccion">En Producción</SelectItem>
-                                    <SelectItem value="instalado">Instalado</SelectItem>
-                                    <SelectItem value="finalizado">Finalizado</SelectItem>
-                                    <SelectItem value="cancelado">Cancelado</SelectItem>
+                                <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                                    {[...PROJECT_STEPS, { id: 'cancelado', label: 'Cancelado' }].map(s => (
+                                        <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
+                            <Button onClick={handleStatusUpdate} disabled={updating || status === project.status} className="h-10 rounded-xl bg-[#13ec5b] px-4 font-bold text-[#102216] hover:bg-[#13ec5b]/90" title="Guardar estado">
+                                {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            </Button>
                         </div>
                     </div>
-                    <Button onClick={handleStatusUpdate} disabled={updating || status === project.status} className="rounded-xl bg-[#102216] hover:bg-[#1a3a2a] text-white h-10 w-10 p-0">
-                        {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    </Button>
                 </div>
-            </div>
+            </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {project.status !== 'cancelado' && (
+                <ol className="mt-4 grid grid-cols-3 gap-1 rounded-3xl bg-white p-2 shadow-sm md:grid-cols-6">
+                    {PROJECT_STEPS.map((s, i) => (
+                        <li key={s.id} className={`flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-bold md:text-sm ${i === stepIndex ? 'bg-[#102216] text-white' : i < stepIndex ? 'text-[#0a8c35]' : 'text-slate-400'}`}>
+                            <span className={`h-2 w-2 flex-none rounded-full ${i <= stepIndex ? s.dot : 'bg-slate-200'}`} /> {s.label}
+                        </li>
+                    ))}
+                </ol>
+            )}
+
+            <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Briefing del Cliente */}
@@ -774,51 +747,80 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
                     )}
 
                     {/* Tabs */}
-                    <Tabs defaultValue="files" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="renders" className="flex gap-2"><ImageIcon className="w-4 h-4" /> Renders AI</TabsTrigger>
-                            <TabsTrigger value="files" className="flex gap-2"><Paperclip className="w-4 h-4" /> Archivos ({files.length})</TabsTrigger>
-                            <TabsTrigger value="messages" className="flex gap-2"><MessageSquare className="w-4 h-4" /> Mensajes ({messages.length})</TabsTrigger>
-                            <TabsTrigger value="portfolio" className="flex gap-2"><Globe className="w-4 h-4" /> Portafolio</TabsTrigger>
+                    <Tabs defaultValue="renders" className="w-full">
+                        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl bg-white p-1 shadow-sm md:grid-cols-4">
+                            <TabsTrigger value="renders" className="flex gap-2 rounded-xl py-2.5 data-[state=active]:bg-[#102216] data-[state=active]:text-white"><ImageIcon className="w-4 h-4" /> Renders ({renderUrls.length})</TabsTrigger>
+                            <TabsTrigger value="files" className="flex gap-2 rounded-xl py-2.5 data-[state=active]:bg-[#102216] data-[state=active]:text-white"><Paperclip className="w-4 h-4" /> Archivos ({files.length})</TabsTrigger>
+                            <TabsTrigger value="messages" className="flex gap-2 rounded-xl py-2.5 data-[state=active]:bg-[#102216] data-[state=active]:text-white"><StickyNote className="w-4 h-4" /> Notas ({messages.length})</TabsTrigger>
+                            <TabsTrigger value="portfolio" className="flex gap-2 rounded-xl py-2.5 data-[state=active]:bg-[#102216] data-[state=active]:text-white"><Globe className="w-4 h-4" /> Portafolio</TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="renders" className="mt-4">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-medium">Galería de Visualizaciones</h3>
-                                <Button size="sm" variant="outline" onClick={handleRegenerate} disabled={updating}>
-                                    {updating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                                    Regenerar Nueva Versión
+                        <TabsContent value="renders" className="mt-4 space-y-4">
+                            <form
+                                className="flex flex-col gap-2 rounded-2xl bg-white p-3 shadow-sm sm:flex-row"
+                                onSubmit={(e) => {
+                                    e.preventDefault()
+                                    handleRegenerate()
+                                }}
+                            >
+                                <Input
+                                    value={renderNote}
+                                    onChange={(e) => setRenderNote(e.target.value)}
+                                    disabled={generating}
+                                    placeholder="Instrucciones para la nueva versión (opcional): más madera, logo del cliente…"
+                                    className="h-11 flex-1 rounded-xl border-slate-200 focus-visible:ring-[#13ec5b]"
+                                />
+                                <Button type="submit" disabled={generating} className="h-11 rounded-xl bg-[#102216] px-5 font-bold text-white hover:bg-[#1a3a2a]">
+                                    {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4 text-[#13ec5b]" />}
+                                    {generating ? 'Generando…' : 'Nueva versión'}
                                 </Button>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {project.renders && project.renders.length > 0 ? (
-                                    project.renders.map((render: any) => (
-                                        <Card key={render.id} className={`overflow-hidden ${render.is_selected ? 'ring-2 ring-primary' : ''}`}>
-                                            <div className="aspect-video relative bg-muted group">
-                                                <img src={render.image_url} alt="Render" className="object-cover w-full h-full" />
-                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                    <Button size="sm" variant="secondary" onClick={() => handleSetMainRender(render.id, render.image_url)} disabled={render.is_selected}>
-                                                        {render.is_selected ? 'Principal' : 'Usar como Portada'}
-                                                    </Button>
-                                                    <Button size="icon" variant="destructive" onClick={() => handleDeleteRender(render.id)}>
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                                {render.is_selected && (
-                                                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-                                                        Principal
-                                                    </div>
+                            </form>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                {project.renders?.map((render: any, i: number) => {
+                                    const isMain = render.image_url === cover
+                                    return (
+                                        <figure key={render.id} className={`group overflow-hidden rounded-2xl bg-white shadow-sm ring-2 ${isMain ? 'ring-[#13ec5b]' : 'ring-transparent'}`}>
+                                            <div className="relative aspect-video">
+                                                <button className="h-full w-full cursor-zoom-in" onClick={() => setLightboxIndex(i)} aria-label={`Ver versión ${render.version} en grande`}>
+                                                    <img src={render.image_url} alt={`Versión ${render.version}`} className="h-full w-full object-cover" />
+                                                </button>
+                                                {isMain && (
+                                                    <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#13ec5b] px-2.5 py-1 text-xs font-bold text-[#102216]">
+                                                        <Star className="h-3 w-3 fill-current" /> Principal
+                                                    </span>
                                                 )}
+                                                <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                                    <button onClick={() => setLightboxIndex(i)} className="rounded-full bg-black/60 p-2 text-white backdrop-blur hover:bg-black/80" aria-label="Ampliar"><Maximize2 className="h-4 w-4" /></button>
+                                                    <button onClick={() => handleDeleteRender(render.id)} className="rounded-full bg-black/60 p-2 text-white backdrop-blur hover:bg-red-600" aria-label="Eliminar render"><Trash2 className="h-4 w-4" /></button>
+                                                </div>
                                             </div>
-                                            <CardContent className="p-3">
-                                                <p className="text-xs text-muted-foreground">Versión {render.version} • {new Date(render.created_at).toLocaleDateString()}</p>
-                                                <p className="text-xs truncate" title={render.prompt}>{render.prompt}</p>
-                                            </CardContent>
-                                        </Card>
-                                    ))
-                                ) : (
-                                    <div className="col-span-2 py-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
-                                        No hay renders generados aún
+                                            <figcaption className="flex items-center justify-between gap-3 p-3">
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-bold text-[#102216]">Versión {render.version}</p>
+                                                    <p className="truncate text-xs text-slate-500" title={render.prompt}>
+                                                        {render.metadata?.provider ? `${render.metadata.provider} · ` : ''}{timeAgo(render.created_at)}
+                                                    </p>
+                                                </div>
+                                                {!isMain && (
+                                                    <Button size="sm" variant="outline" onClick={() => handleSetMainRender(render.image_url)} disabled={updating} className="flex-none rounded-xl border-slate-200 text-xs hover:border-[#13ec5b]/40 hover:bg-[#13ec5b]/10 hover:text-[#0a8c35]">
+                                                        Usar como principal
+                                                    </Button>
+                                                )}
+                                            </figcaption>
+                                        </figure>
+                                    )
+                                })}
+                                {generating && (
+                                    <div className="grid aspect-video place-items-center rounded-2xl border-2 border-dashed border-[#13ec5b]/40 bg-[#13ec5b]/5 text-center">
+                                        <div>
+                                            <Loader2 className="mx-auto mb-2 h-8 w-8 animate-spin text-[#13ec5b]" />
+                                            <p className="text-sm font-semibold text-[#102216]">Generando nueva versión…</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {!renderUrls.length && !generating && (
+                                    <div className="col-span-full rounded-2xl border-2 border-dashed border-slate-200 py-10 text-center text-slate-500">
+                                        Este proyecto aún no tiene renders. Genera el primero arriba.
                                     </div>
                                 )}
                             </div>
@@ -879,17 +881,27 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
                         </TabsContent>
 
                         <TabsContent value="messages" className="mt-4">
-                            <Card className="h-[500px] flex flex-col">
+                            <Card className="flex h-[500px] flex-col rounded-3xl border-none shadow-sm">
                                 <CardHeader>
-                                    <CardTitle>Comunicación con Cliente</CardTitle>
+                                    <CardTitle className="flex items-center gap-2 text-[#102216]"><StickyNote className="h-5 w-5 text-[#13ec5b]" /> Notas internas</CardTitle>
+                                    <CardDescription>Solo las ve el equipo. El cliente no tiene acceso.</CardDescription>
                                 </CardHeader>
-                                <CardContent className="flex-1 flex flex-col p-0">
-                                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                        <div className="text-center py-12 text-muted-foreground">
-                                            El sistema de mensajes está temporalmente deshabilitado (Tabla faltante).
-                                        </div>
+                                <CardContent className="flex flex-1 flex-col p-0">
+                                    <div className="flex-1 space-y-3 overflow-y-auto px-6 pb-4">
+                                        {messages.length === 0 ? (
+                                            <p className="py-12 text-center text-sm text-slate-500">Sin notas. Deja aquí acuerdos, llamadas o pendientes del proyecto.</p>
+                                        ) : messages.map(note => (
+                                            <div key={note.id} className="rounded-2xl bg-slate-50 p-4">
+                                                <div className="mb-1 flex items-baseline justify-between gap-2 text-xs">
+                                                    <span className="font-bold text-[#102216]">{note.author?.full_name || note.author?.email || 'Equipo'}</span>
+                                                    <span className="text-slate-400">{timeAgo(note.created_at)}</span>
+                                                </div>
+                                                <p className="whitespace-pre-wrap text-sm text-slate-700">{note.message}</p>
+                                            </div>
+                                        ))}
+                                        <div ref={messagesEndRef} />
                                     </div>
-                                    <div className="p-4 border-t bg-card">
+                                    <div className="border-t border-slate-100 p-4">
                                         <form
                                             onSubmit={(e) => {
                                                 e.preventDefault()
@@ -900,12 +912,12 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
                                             <Input
                                                 value={newMessage}
                                                 onChange={(e) => setNewMessage(e.target.value)}
-                                                placeholder="Escribe un mensaje..."
-                                                className="flex-1"
+                                                placeholder="Escribe una nota para el equipo…"
+                                                className="flex-1 rounded-xl border-slate-200 focus-visible:ring-[#13ec5b]"
                                                 disabled={sending}
                                             />
-                                            <Button type="submit" disabled={sending || !newMessage.trim()}>
-                                                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                            <Button type="submit" disabled={sending || !newMessage.trim()} className="rounded-xl bg-[#102216] hover:bg-[#1a3a2a]">
+                                                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                                             </Button>
                                         </form>
                                     </div>
@@ -1113,13 +1125,15 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
                             </div>
 
                             <div className="pt-4 border-t border-slate-100">
-                                <Button className="w-full mb-2 rounded-xl border-slate-200 text-slate-600 hover:bg-[#13ec5b]/10 hover:text-[#0a8c35] hover:border-[#13ec5b]/30" variant="outline">
-                                    <Download className="w-4 h-4 mr-2" />
-                                    Descargar Cotización
-                                </Button>
-                                <div className="mt-4 p-3 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-xl text-sm text-center font-medium">
-                                    Pago Pendiente
-                                </div>
+                                {/* The client's proposal page has the "Descargar PDF" button */}
+                                <a
+                                    href={`/projects/${id}`}
+                                    target="_blank"
+                                    className="flex h-10 w-full items-center justify-center rounded-xl border border-slate-200 text-sm font-medium text-slate-600 transition-colors hover:border-[#13ec5b]/30 hover:bg-[#13ec5b]/10 hover:text-[#0a8c35]"
+                                >
+                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                    Ver propuesta del cliente
+                                </a>
                             </div>
                         </CardContent>
                     </Card>
@@ -1147,6 +1161,23 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
                                     <span className="text-slate-500">Empresa:</span>
                                     <span className="font-medium text-slate-700">{project.user?.company || '-'}</span>
                                 </div>
+                            </div>
+                            <div className="mt-4 grid grid-cols-2 gap-2">
+                                {phone && (
+                                    <a href={`https://wa.me/${phone}`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#13ec5b] text-sm font-bold text-[#102216] hover:bg-[#13ec5b]/90">
+                                        <MessageSquare className="h-4 w-4" /> WhatsApp
+                                    </a>
+                                )}
+                                {phone && (
+                                    <a href={`tel:+${phone}`} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                                        <Phone className="h-4 w-4" /> Llamar
+                                    </a>
+                                )}
+                                {project.user?.email && (
+                                    <a href={`mailto:${project.user.email}?subject=${encodeURIComponent(`Tu propuesta ${project.project_number || ''} · Alma Verde`)}`} className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 col-span-2`}>
+                                        <Mail className="h-4 w-4" /> Escribir correo
+                                    </a>
+                                )}
                             </div>
 
                             {/* Metadata extras */}
@@ -1176,6 +1207,8 @@ export default function AdminProjectDetailsPage({ params }: { params: Promise<{ 
                     </Card>
                 </div>
             </div>
+
+            <Lightbox images={renderUrls} index={lightboxIndex} onChange={setLightboxIndex} alt={projectName(project)} downloadable />
         </div>
     )
 }

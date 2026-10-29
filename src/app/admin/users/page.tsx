@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,7 +12,7 @@ import {
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { Loader2, Search, Eye, Users as UsersIcon, Shield, UserCheck, UserX } from 'lucide-react'
+import { Loader2, Search, Users as UsersIcon, Shield, UserCheck, UserX } from 'lucide-react'
 
 interface UserProfile {
     id: string
@@ -47,7 +46,6 @@ const ROLE_COLOR: Record<string, 'default' | 'secondary' | 'destructive' | 'outl
 }
 
 export default function UsersPage() {
-    const router = useRouter()
     const [users, setUsers] = useState<UserProfile[]>([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
@@ -221,13 +219,12 @@ export default function UsersPage() {
                                 <TableHead className="font-bold text-slate-600">Empresa</TableHead>
                                 <TableHead className="font-bold text-slate-600">Registro</TableHead>
                                 <TableHead className="font-bold text-slate-600">Estado</TableHead>
-                                <TableHead className="font-bold text-slate-600 text-right">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {filteredUsers.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-16">
+                                    <TableCell colSpan={5} className="text-center py-16">
                                         <div className="flex flex-col items-center gap-3 text-slate-400">
                                             <UsersIcon className="w-12 h-12 opacity-30" />
                                             <p className="text-lg font-medium">No se encontraron usuarios</p>
@@ -283,16 +280,6 @@ export default function UsersPage() {
                                                     <><UserX className="w-3 h-3" /> Inactivo</>
                                                 )}
                                             </button>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => router.push(`/admin/users/${user.id}`)}
-                                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))
