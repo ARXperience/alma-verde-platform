@@ -106,7 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </div>
                     <div>
                         <p className="text-xl font-bold tracking-tight text-white">Alma Verde</p>
-                        <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-[#13ec5b]">Workspace</p>
+                        <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-[#13ec5b]">Panel de gestión</p>
                     </div>
                 </Link>
                 <button className="rounded-lg p-2 hover:bg-white/10 md:hidden" onClick={() => setMenuOpen(false)} aria-label="Cerrar menú">
@@ -183,7 +183,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <button onClick={() => setMenuOpen(true)} className="rounded-lg p-2 hover:bg-white/10" aria-label="Abrir menú">
                         <Menu className="h-5 w-5" />
                     </button>
-                    <span className="font-bold">Alma Verde <span className="text-[#13ec5b]">Workspace</span></span>
+                    <span className="font-bold">Alma Verde <span className="text-[#13ec5b]">Panel</span></span>
                     <span className="w-9" />
                 </header>
                 <main className="flex-1 overflow-auto bg-[#f6f8f6]">{children}</main>

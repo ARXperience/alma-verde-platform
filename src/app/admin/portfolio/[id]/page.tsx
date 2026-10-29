@@ -207,12 +207,12 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
     }
 
     return (
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
             <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" onClick={() => router.push('/admin/portfolio')} className="hover:bg-slate-100 text-slate-600 rounded-xl px-4 h-12">
                         <ArrowLeft className="h-5 w-5 mr-2" />
-                        Volver
+                        Portafolio
                     </Button>
                     <div>
                         <h1 className="text-4xl font-black text-[#102216] tracking-tight">Editar Proyecto</h1>

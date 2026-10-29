@@ -1,198 +1,106 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Search, Eye } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-import { Badge } from '@/components/ui/badge'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
+import { ChevronRight, Loader2, ShoppingCart } from 'lucide-react'
+import { FilterChip, PageHeader, Pill, SearchBox, Stat } from '@/components/admin/ui'
+import { ORDER_STATUS, PAYMENT_METHODS, nameOf, statusOf } from '@/lib/admin/labels'
+import { formatCOP, formatDate, timeAgo } from '@/lib/projects/display'
 
 interface Order {
     id: string
     order_number: string
     total: number
     status: string
-    payment_method?: string
+    payment_method: string | null
     created_at: string
     customer_name: string
     customer_email: string
+    items: { quantity: number }[] | null
 }
 
-const STATUS_MAP: Record<string, string> = {
-    'PENDING': 'Pendiente',
-    'PAID': 'Pagada',
-    'PROCESSING': 'Procesando',
-    'SHIPPED': 'Enviada',
-    'DELIVERED': 'Entregada',
-    'CANCELLED': 'Cancelada'
-}
-
-const STATUS_COLOR_MAP: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-    'PENDING': 'secondary',
-    'PAID': 'default',
-    'PROCESSING': 'default',
-    'SHIPPED': 'outline',
-    'DELIVERED': 'outline', // green usually best but outline fine for now
-    'CANCELLED': 'destructive'
-}
+// Orders someone on the team still has to act on
+const OPEN = ['PENDING', 'PAID', 'PROCESSING']
 
 export default function OrdersPage() {
-    const router = useRouter()
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
-    const [searchTerm, setSearchTerm] = useState('')
-    const [statusFilter, setStatusFilter] = useState('all')
+    const [search, setSearch] = useState('')
+    const [status, setStatus] = useState('all')
 
     useEffect(() => {
-        fetchOrders()
+        supabase.from('orders').select('*, items:order_items(quantity)').order('created_at', { ascending: false }).then(({ data, error }) => {
+            if (error) console.error('Error fetching orders:', error)
+            setOrders((data || []) as unknown as Order[])
+            setLoading(false)
+        })
     }, [])
 
-    async function fetchOrders() {
-        try {
-            setLoading(true)
-            const { data, error } = await supabase
-                .from('orders')
-                .select('*')
-                .order('created_at', { ascending: false })
-
-            if (error) throw error
-            setOrders(data as any || [])
-        } catch (error) {
-            console.error('Error fetching orders:', JSON.stringify(error, null, 2))
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const filteredOrders = orders.filter(order => {
-        const matchesSearch = order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.customer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesStatus = statusFilter === 'all' || order.status === statusFilter
-        return matchesSearch && matchesStatus
-    })
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0
-        }).format(amount)
-    }
+    const term = search.trim().toLowerCase()
+    const matches = orders.filter(o =>
+        !term || [o.order_number, o.customer_name, o.customer_email].some(v => v?.toLowerCase().includes(term))
+    )
+    const visible = status === 'all' ? matches : matches.filter(o => o.status === status)
+    const sold = orders.filter(o => o.status !== 'CANCELLED')
+    const soldTotal = sold.reduce((sum, o) => sum + Number(o.total || 0), 0)
 
     return (
-        <div className="p-8 space-y-8">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ordenes</h1>
-                    <p className="text-gray-500">Gestiona los pedidos de la tienda</p>
+        <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+            <PageHeader eyebrow="Tienda" title="Órdenes" description="Compras hechas en la tienda en línea" />
+
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <Stat label="Ventas" value={formatCOP(soldTotal)} hint={`${sold.length} órdenes sin cancelar`} />
+                <Stat label="Por atender" value={orders.filter(o => OPEN.includes(o.status)).length} hint="Pendientes, pagadas o en preparación" />
+                <Stat label="Entregadas" value={orders.filter(o => o.status === 'DELIVERED').length} />
+                <Stat label="Ticket promedio" value={formatCOP(sold.length ? soldTotal / sold.length : 0)} />
+            </div>
+
+            <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+                <SearchBox value={search} onChange={setSearch} placeholder="Buscar por número, cliente o correo…" />
+                <div className="flex flex-wrap gap-2">
+                    <FilterChip active={status === 'all'} onClick={() => setStatus('all')} label="Todas" count={matches.length} />
+                    {Object.entries(ORDER_STATUS).map(([code, s]) => (
+                        <FilterChip key={code} active={status === code} onClick={() => setStatus(code)} label={s.label} count={matches.filter(o => o.status === code).length} />
+                    ))}
                 </div>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <div className="flex gap-4">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                            <Input
-                                placeholder="Buscar por número o email..."
-                                className="pl-8"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+            {loading ? (
+                <div className="flex justify-center p-16"><Loader2 className="h-8 w-8 animate-spin text-[#13ec5b]" /></div>
+            ) : (
+                <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+                    {visible.length === 0 && (
+                        <div className="p-16 text-center">
+                            <ShoppingCart className="mx-auto mb-4 h-10 w-10 text-slate-300" />
+                            <p className="font-bold text-[#102216]">{orders.length ? 'No hay órdenes con estos filtros' : 'Aún no hay órdenes'}</p>
                         </div>
-                        <Select
-                            value={statusFilter}
-                            onValueChange={setStatusFilter}
-                        >
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Estado" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos</SelectItem>
-                                <SelectItem value="PENDING">Pendiente</SelectItem>
-                                <SelectItem value="PAID">Pagada</SelectItem>
-                                <SelectItem value="PROCESSING">Procesando</SelectItem>
-                                <SelectItem value="SHIPPED">Enviada</SelectItem>
-                                <SelectItem value="DELIVERED">Entregada</SelectItem>
-                                <SelectItem value="CANCELLED">Cancelada</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    {loading ? (
-                        <div className="flex justify-center py-8">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
-                    ) : filteredOrders.length === 0 ? (
-                        <div className="text-center py-12 text-gray-500">
-                            No se encontraron ordenes
-                        </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Orden</TableHead>
-                                    <TableHead>Cliente</TableHead>
-                                    <TableHead>Fecha</TableHead>
-                                    <TableHead>Total</TableHead>
-                                    <TableHead>Pago</TableHead>
-                                    <TableHead>Estado</TableHead>
-                                    <TableHead className="text-right">Acciones</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredOrders.map((order) => (
-                                    <TableRow key={order.id}>
-                                        <TableCell className="font-mono font-medium">{order.order_number}</TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                 {order.customer_name || 'N/A'}
-                                            <span className="block text-xs text-muted-foreground">{order.customer_email}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                                        <TableCell>{formatCurrency(order.total)}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="text-xs">
-                                                {order.payment_method || 'N/A'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={STATUS_COLOR_MAP[order.status] || 'default'}>
-                                                {STATUS_MAP[order.status] || order.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button size="icon" variant="ghost" onClick={() => router.push(`/admin/orders/${order.id}`)}>
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
                     )}
-                </CardContent>
-            </Card>
+                    {visible.map(o => {
+                        const s = statusOf(ORDER_STATUS, o.status)
+                        const units = (o.items || []).reduce((sum, i) => sum + (i.quantity || 0), 0)
+                        return (
+                            <Link key={o.id} href={`/admin/orders/${o.id}`} className="flex items-center gap-4 border-b border-slate-100 p-4 transition-colors last:border-0 hover:bg-slate-50 md:px-6">
+                                <div className="grid h-12 w-12 flex-none place-items-center rounded-2xl bg-[#13ec5b]/10 text-[#0a8c35]">
+                                    <ShoppingCart className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate font-bold text-[#102216]">{o.customer_name || 'Cliente sin nombre'}</p>
+                                    <p className="truncate text-sm text-slate-500">
+                                        {o.order_number} · {units} {units === 1 ? 'producto' : 'productos'} · {nameOf(PAYMENT_METHODS, o.payment_method)}
+                                    </p>
+                                </div>
+                                <div className="hidden w-32 md:block"><Pill tone={s.tone}>{s.label}</Pill></div>
+                                <div className="text-right">
+                                    <p className="font-black text-[#102216]">{formatCOP(Number(o.total))}</p>
+                                    <p className="text-xs text-slate-400" title={formatDate(o.created_at)}>{timeAgo(o.created_at)}</p>
+                                </div>
+                                <ChevronRight className="h-5 w-5 flex-none text-slate-300" />
+                            </Link>
+                        )
+                    })}
+                </div>
+            )}
         </div>
     )
 }

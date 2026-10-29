@@ -1,191 +1,103 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from '@/components/ui/table'
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
-import { Loader2, Search, Eye, FileText } from 'lucide-react'
+import { ChevronRight, FileText, Loader2 } from 'lucide-react'
+import { FilterChip, PageHeader, Pill, SearchBox, Stat } from '@/components/admin/ui'
+import { QUOTATION_STATUS, statusOf } from '@/lib/admin/labels'
+import { formatCOP, timeAgo } from '@/lib/projects/display'
 
 interface Quotation {
     id: string
     reference: string
     customer_name: string
     customer_email: string
-    customer_phone: string | null
     project_type: string | null
     total: number
     status: string
     created_at: string
 }
 
-const STATUS_MAP: Record<string, string> = {
-    'PENDING': 'Pendiente',
-    'SENT': 'Enviada',
-    'APPROVED': 'Aprobada',
-    'REJECTED': 'Rechazada',
-}
-
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-    'PENDING': 'secondary',
-    'SENT': 'outline',
-    'APPROVED': 'default',
-    'REJECTED': 'destructive',
-}
-
 export default function QuotationsPage() {
-    const router = useRouter()
     const [quotations, setQuotations] = useState<Quotation[]>([])
     const [loading, setLoading] = useState(true)
-    const [searchTerm, setSearchTerm] = useState('')
-    const [statusFilter, setStatusFilter] = useState('all')
+    const [search, setSearch] = useState('')
+    const [status, setStatus] = useState('all')
 
     useEffect(() => {
-        fetchQuotations()
+        supabase.from('quotations').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
+            if (error) console.error('Error fetching quotations:', error)
+            setQuotations((data || []) as Quotation[])
+            setLoading(false)
+        })
     }, [])
 
-    async function fetchQuotations() {
-        try {
-            setLoading(true)
-            const { data, error } = await supabase
-                .from('quotations')
-                .select('*')
-                .order('created_at', { ascending: false })
-
-            if (error) throw error
-            setQuotations(data || [])
-        } catch (error) {
-            console.error('Error fetching quotations:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency', currency: 'COP', minimumFractionDigits: 0
-        }).format(amount)
-    }
-
-    const filteredQuotations = quotations.filter(q => {
-        const matchesSearch =
-            q.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            q.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            q.customer_email?.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesStatus = statusFilter === 'all' || q.status === statusFilter
-        return matchesSearch && matchesStatus
-    })
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        )
-    }
+    const term = search.trim().toLowerCase()
+    const matches = quotations.filter(q =>
+        !term || [q.reference, q.customer_name, q.customer_email].some(v => v?.toLowerCase().includes(term))
+    )
+    const visible = status === 'all' ? matches : matches.filter(q => q.status === status)
+    const approved = quotations.filter(q => q.status === 'APPROVED')
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-4xl font-black text-[#102216] tracking-tight">Cotizaciones</h1>
-                    <p className="text-slate-500 mt-1">Cotizaciones creadas por WhatsApp y el equipo. Las del cotizador IA están en Proyectos.</p>
+        <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+            <PageHeader
+                eyebrow="Ventas"
+                title="Cotizaciones"
+                description={<>Cotizaciones creadas por WhatsApp y el equipo. Las del cotizador IA están en <Link href="/admin/projects" className="font-semibold text-[#0a8c35] hover:underline">Proyectos</Link>.</>}
+            />
+
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <Stat label="Cotizaciones" value={quotations.length} />
+                <Stat label="Pendientes" value={quotations.filter(q => q.status === 'PENDING').length} />
+                <Stat label="Aprobadas" value={approved.length} />
+                <Stat label="Valor aprobado" value={formatCOP(approved.reduce((sum, q) => sum + Number(q.total || 0), 0))} />
+            </div>
+
+            <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
+                <SearchBox value={search} onChange={setSearch} placeholder="Buscar por referencia, cliente o correo…" />
+                <div className="flex flex-wrap gap-2">
+                    <FilterChip active={status === 'all'} onClick={() => setStatus('all')} label="Todas" count={matches.length} />
+                    {Object.entries(QUOTATION_STATUS).map(([code, s]) => (
+                        <FilterChip key={code} active={status === code} onClick={() => setStatus(code)} label={s.label} count={matches.filter(q => q.status === code).length} />
+                    ))}
                 </div>
             </div>
 
-            <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-                <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-6 pt-8 px-8">
-                    <div className="flex flex-col md:flex-row gap-4 justify-between">
-                        <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <Input
-                                placeholder="Buscar por referencia, cliente o email..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 rounded-xl"
-                            />
+            {loading ? (
+                <div className="flex justify-center p-16"><Loader2 className="h-8 w-8 animate-spin text-[#13ec5b]" /></div>
+            ) : (
+                <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+                    {visible.length === 0 && (
+                        <div className="p-16 text-center">
+                            <FileText className="mx-auto mb-4 h-10 w-10 text-slate-300" />
+                            <p className="font-bold text-[#102216]">{quotations.length ? 'No hay cotizaciones con estos filtros' : 'Aún no hay cotizaciones'}</p>
+                            {!quotations.length && <p className="text-sm text-slate-500">Las que genere el asistente de WhatsApp aparecerán aquí.</p>}
                         </div>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-48 rounded-xl">
-                                <SelectValue placeholder="Filtrar por estado" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos</SelectItem>
-                                <SelectItem value="PENDING">Pendiente</SelectItem>
-                                <SelectItem value="SENT">Enviada</SelectItem>
-                                <SelectItem value="APPROVED">Aprobada</SelectItem>
-                                <SelectItem value="REJECTED">Rechazada</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-slate-50 hover:bg-slate-50">
-                                <TableHead className="font-bold text-slate-600">Referencia</TableHead>
-                                <TableHead className="font-bold text-slate-600">Cliente</TableHead>
-                                <TableHead className="font-bold text-slate-600">Tipo</TableHead>
-                                <TableHead className="font-bold text-slate-600">Fecha</TableHead>
-                                <TableHead className="font-bold text-slate-600">Total</TableHead>
-                                <TableHead className="font-bold text-slate-600">Estado</TableHead>
-                                <TableHead className="font-bold text-slate-600 text-right">Acciones</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredQuotations.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={7} className="text-center py-16">
-                                        <div className="flex flex-col items-center gap-3 text-slate-400">
-                                            <FileText className="w-12 h-12 opacity-30" />
-                                            <p className="text-lg font-medium">No hay cotizaciones</p>
-                                            <p className="text-sm">Las cotizaciones generadas aparecerán aquí</p>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                filteredQuotations.map((q) => (
-                                    <TableRow key={q.id} className="hover:bg-slate-50/80 group">
-                                        <TableCell className="font-mono font-medium text-[#102216]">{q.reference}</TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="font-medium">{q.customer_name}</span>
-                                                <span className="text-xs text-slate-500">{q.customer_email}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="capitalize">{q.project_type || '—'}</TableCell>
-                                        <TableCell>{new Date(q.created_at).toLocaleDateString('es-CO')}</TableCell>
-                                        <TableCell className="font-bold">{formatCurrency(q.total)}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={STATUS_VARIANT[q.status] || 'secondary'}>
-                                                {STATUS_MAP[q.status] || q.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => router.push(`/admin/quotations/${q.id}`)}
-                                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                    )}
+                    {visible.map(q => {
+                        const s = statusOf(QUOTATION_STATUS, q.status)
+                        return (
+                            <Link key={q.id} href={`/admin/quotations/${q.id}`} className="flex items-center gap-4 border-b border-slate-100 p-4 transition-colors last:border-0 hover:bg-slate-50 md:px-6">
+                                <div className="grid h-12 w-12 flex-none place-items-center rounded-2xl bg-[#13ec5b]/10 text-[#0a8c35]"><FileText className="h-5 w-5" /></div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate font-bold text-[#102216]">{q.customer_name || 'Cliente sin nombre'}</p>
+                                    <p className="truncate text-sm text-slate-500">
+                                        <span className="font-mono">{q.reference}</span>{q.project_type ? ` · ${q.project_type}` : ''}
+                                    </p>
+                                </div>
+                                <div className="hidden w-28 md:block"><Pill tone={s.tone}>{s.label}</Pill></div>
+                                <div className="text-right">
+                                    <p className="font-black text-[#102216]">{formatCOP(Number(q.total))}</p>
+                                    <p className="text-xs text-slate-400">{timeAgo(q.created_at)}</p>
+                                </div>
+                                <ChevronRight className="h-5 w-5 flex-none text-slate-300" />
+                            </Link>
+                        )
+                    })}
+                </div>
+            )}
         </div>
     )
 }

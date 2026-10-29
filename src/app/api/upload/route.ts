@@ -1,8 +1,13 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireStaff } from '@/lib/projects/access'
 
 export async function POST(request: Request) {
+    // Admin-only: these routes use the service key, so they must check the caller
+    const staff = await requireStaff()
+    if ('error' in staff) return staff.error
+
     try {
         const formData = await request.formData()
         const file = formData.get('file') as File

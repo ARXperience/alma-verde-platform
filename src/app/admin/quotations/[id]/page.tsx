@@ -5,9 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -15,6 +12,8 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Loader2, ArrowLeft, User, Mail, Phone, FileText, MapPin, Calendar, MessageCircle } from 'lucide-react'
+import { Pill } from '@/components/admin/ui'
+import { QUOTATION_STATUS, statusOf } from '@/lib/admin/labels'
 
 interface QuotationItem {
     concept: string
@@ -40,13 +39,6 @@ interface Quotation {
     valid_until: string | null
     created_at: string
     updated_at: string
-}
-
-const STATUS_MAP: Record<string, string> = {
-    'PENDING': 'Pendiente',
-    'SENT': 'Enviada',
-    'APPROVED': 'Aprobada',
-    'REJECTED': 'Rechazada',
 }
 
 export default function QuotationDetailPage() {
@@ -153,23 +145,24 @@ export default function QuotationDetailPage() {
     const items: QuotationItem[] = Array.isArray(quotation.items) ? quotation.items : []
 
     return (
-        <div className="p-8 space-y-8 max-w-5xl mx-auto">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" onClick={() => router.push('/admin/quotations')}>
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Volver
-                </Button>
-                <div className="flex-1">
-                    <h1 className="text-3xl font-bold flex items-center gap-3">
-                        Cotización #{quotation.reference}
-                        <Badge variant="outline" className="text-base">
-                            {STATUS_MAP[quotation.status] || quotation.status}
-                        </Badge>
-                    </h1>
-                    <p className="text-gray-500">
-                        Creada el {new Date(quotation.created_at).toLocaleDateString('es-CO')} a las {new Date(quotation.created_at).toLocaleTimeString('es-CO')}
-                    </p>
-                </div>
+        <div className="mx-auto max-w-5xl space-y-8 p-4 sm:p-6 lg:p-8">
+            <div>
+                <button onClick={() => router.push('/admin/quotations')} className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition-colors hover:text-[#0a8c35]">
+                    <ArrowLeft className="h-4 w-4" /> Cotizaciones
+                </button>
+                <section className="flex flex-col justify-between gap-4 rounded-3xl bg-[#102216] p-6 text-white shadow-sm md:flex-row md:items-end md:p-8">
+                    <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Pill tone={statusOf(QUOTATION_STATUS, quotation.status).tone}>{statusOf(QUOTATION_STATUS, quotation.status).label}</Pill>
+                            <span className="font-mono text-sm text-white/60">{quotation.reference}</span>
+                        </div>
+                        <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">{quotation.customer_name || 'Cliente sin nombre'}</h1>
+                        <p className="mt-1 text-white/60">
+                            Creada el {new Date(quotation.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })} a las {new Date(quotation.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                    </div>
+                    <p className="text-4xl font-black text-[#13ec5b]">{formatCurrency(quotation.total)}</p>
+                </section>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

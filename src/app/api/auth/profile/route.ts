@@ -8,20 +8,25 @@ function getSupabaseAdmin() {
     )
 }
 
+// Profile of the signed-in user. The user comes from the access token, never from the query:
+// taking ?userId= from the request let anyone read any user's email, phone and role.
 export async function GET(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url)
-        const userId = searchParams.get('userId')
-
-        if (!userId) {
-            return NextResponse.json({ error: 'userId is required' }, { status: 400 })
+        const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+        if (!token) {
+            return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
         }
 
         const supabase = getSupabaseAdmin()
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
+        }
+
         const { data, error } = await supabase
             .from('users')
             .select('*')
-            .eq('id', userId)
+            .eq('id', user.id)
             .single()
 
         if (error) {

@@ -144,11 +144,11 @@ export default function NewPortfolioPage() {
     }
 
     return (
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
             <div className="flex items-center gap-4 mb-10">
                 <Button variant="ghost" onClick={() => router.push('/admin/portfolio')} className="hover:bg-slate-100 text-slate-600 rounded-xl px-4 h-12">
                     <ArrowLeft className="h-5 w-5 mr-2" />
-                    Volver
+                    Portafolio
                 </Button>
                 <div>
                     <h1 className="text-4xl font-black text-[#102216] tracking-tight">Nuevo Proyecto</h1>

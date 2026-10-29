@@ -20,13 +20,13 @@ export default function SettingsPage() {
     const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
         { id: 'general', label: 'General', icon: <Building className="w-4 h-4" /> },
         { id: 'ai', label: 'Motor de IA', icon: <Cpu className="w-4 h-4" /> },
-        { id: 'whatsapp', label: 'WhatsApp Bot', icon: <MessageCircle className="w-4 h-4" /> },
+        { id: 'whatsapp', label: 'Asistente de WhatsApp', icon: <MessageCircle className="w-4 h-4" /> },
         { id: 'integrations', label: 'Integraciones', icon: <Key className="w-4 h-4" /> },
         { id: 'notifications', label: 'Notificaciones', icon: <Bell className="w-4 h-4" /> },
     ]
 
     return (
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
             <div className="mb-8">
                 <h1 className="text-4xl font-black text-[#102216] tracking-tight flex items-center gap-3">
                     <Settings className="w-8 h-8" />
@@ -105,7 +105,7 @@ function GeneralTab() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label>Email de contacto</Label>
+                            <Label>Correo de contacto</Label>
                             <Input
                                 value={config.email}
                                 onChange={e => setConfig({ ...config, email: e.target.value })}
@@ -505,8 +505,8 @@ function NotificationsTab() {
         <div className="space-y-6">
             <Card className="border-none shadow-sm rounded-3xl bg-white">
                 <CardHeader>
-                    <CardTitle>Email de Alertas</CardTitle>
-                    <CardDescription>Email donde se enviarán las notificaciones del sistema</CardDescription>
+                    <CardTitle>Correo de alertas</CardTitle>
+                    <CardDescription>Correo donde llegarán las notificaciones del sistema</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Input

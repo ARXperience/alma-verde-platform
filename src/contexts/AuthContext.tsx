@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSupabaseUser(session?.user ?? null)
             if (session?.user) {
-                fetchUserProfile(session.user.id)
+                fetchUserProfile(session.user.id, session.access_token)
             } else {
                 setLoading(false)
             }
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } = supabase.auth.onAuthStateChange(async (_event, session) => {
             setSupabaseUser(session?.user ?? null)
             if (session?.user) {
-                await fetchUserProfile(session.user.id)
+                await fetchUserProfile(session.user.id, session.access_token)
             } else {
                 setUser(null)
                 setLoading(false)
@@ -50,12 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => subscription.unsubscribe()
     }, [])
 
-    async function fetchUserProfile(userId: string) {
+    async function fetchUserProfile(userId: string, accessToken: string) {
         try {
             console.log('🔍 Fetching profile for userId:', userId)
 
             // Fetch via server API route (uses service role key, bypasses RLS)
-            const res = await fetch(`/api/auth/profile?userId=${userId}`)
+            const res = await fetch(`/api/auth/profile`, { headers: { Authorization: `Bearer ${accessToken}` } })
             if (res.ok) {
                 const profile = await res.json()
                 if (profile && profile.id) {

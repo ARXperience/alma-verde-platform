@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireStaff } from '@/lib/projects/access'
 
 function getSupabaseAdmin() {
     return createClient(
@@ -10,6 +11,10 @@ function getSupabaseAdmin() {
 
 // GET — List ALL portfolio items (for admin, includes unpublished)
 export async function GET() {
+    // Admin-only: these routes use the service key, so they must check the caller
+    const staff = await requireStaff()
+    if ('error' in staff) return staff.error
+
     try {
         const supabase = getSupabaseAdmin()
 

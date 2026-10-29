@@ -4,8 +4,8 @@ import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
-import { ChevronRight, Columns3, List, Loader2, Search, Sparkles } from 'lucide-react'
-import { PageHeader, ProjectThumb, StatusBadge } from '@/components/admin/ui'
+import { ChevronRight, Columns3, List, Loader2, Sparkles } from 'lucide-react'
+import { FilterChip, PageHeader, ProjectThumb, SearchBox, StatusBadge } from '@/components/admin/ui'
 import { PROJECT_STEPS, formatCOP, formatDate, projectName, statusLabel, timeAgo } from '@/lib/projects/display'
 
 interface Project {
@@ -94,19 +94,11 @@ function ProjectsView() {
 
             {/* Toolbar */}
             <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
-                <div className="relative lg:w-80">
-                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Buscar proyecto, cliente o ciudad…"
-                        className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm focus:border-[#13ec5b] focus:outline-none focus:ring-2 focus:ring-[#13ec5b]/20"
-                    />
-                </div>
+                <SearchBox value={search} onChange={setSearch} placeholder="Buscar proyecto, cliente o ciudad…" />
                 <div className="flex flex-wrap gap-2">
-                    <Chip active={statusFilter === 'all'} onClick={() => setStatusFilter('all')} label="Todos" count={matches.length} />
+                    <FilterChip active={statusFilter === 'all'} onClick={() => setStatusFilter('all')} label="Todos" count={matches.length} />
                     {ALL_STATUSES.map(status => (
-                        <Chip key={status} active={statusFilter === status} onClick={() => setStatusFilter(status)} label={statusLabel(status)} count={count(status)} />
+                        <FilterChip key={status} active={statusFilter === status} onClick={() => setStatusFilter(status)} label={statusLabel(status)} count={count(status)} />
                     ))}
                 </div>
             </div>
@@ -200,13 +192,3 @@ function BoardCard({ project, moving, onMove }: { project: Project; moving: bool
     )
 }
 
-function Chip({ active, onClick, label, count }: { active: boolean; onClick: () => void; label: string; count: number }) {
-    return (
-        <button
-            onClick={onClick}
-            className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${active ? 'bg-[#102216] text-white' : 'bg-white text-slate-600 shadow-sm hover:text-[#102216]'}`}
-        >
-            {label} <span className={active ? 'text-[#13ec5b]' : 'text-slate-400'}>{count}</span>
-        </button>
-    )
-}

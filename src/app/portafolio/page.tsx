@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowUpRight, Layers3 } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { storyExcerpt as excerpt } from '@/lib/projects/display'
 
 interface PortfolioProject {
     id: string
@@ -25,12 +26,6 @@ function projectLayout(index: number, featured: boolean) {
     if (index % 7 === 3) return 'lg:row-span-2 min-h-[520px] lg:min-h-[680px]'
     if (index % 7 === 5) return 'md:col-span-2 lg:col-span-2 aspect-[16/9]'
     return 'aspect-[4/5]'
-}
-
-// First plain paragraph of a description, skipping "## Título" headings and "Clave: valor" sheet lines
-function excerpt(description: string) {
-    return description.split('\n').map((line) => line.trim())
-        .find((line) => line && !line.startsWith('## ') && !/^[^:.]{2,30}:\s/.test(line)) || ''
 }
 
 export default function PortafolioPage() {

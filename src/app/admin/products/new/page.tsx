@@ -101,12 +101,12 @@ export default function NewProductPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#f6f8f6] dark:bg-[#102216] font-display p-8">
+        <div className="min-h-screen bg-[#f6f8f6] dark:bg-[#102216] font-display p-4 sm:p-6 lg:p-8">
             <div className="max-w-4xl mx-auto space-y-8">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" onClick={() => router.push('/admin/products')} className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-[#1e402a]/50 rounded-lg">
                         <ArrowLeft className="h-4 w-4 mr-2" />
-                        Volver
+                        Productos
                     </Button>
                     <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Nuevo Producto</h1>
                 </div>

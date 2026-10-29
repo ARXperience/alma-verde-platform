@@ -71,6 +71,12 @@ export function projectName(project: Nameable) {
     return area ? `${name} de ${area} m²` : name
 }
 
+// First plain paragraph of a portfolio description, skipping "## Título" headings and "Clave: valor" sheet lines
+export function storyExcerpt(description?: string | null) {
+    return (description || '').split('\n').map(line => line.trim())
+        .find(line => line && !line.startsWith('## ') && !/^[^:.]{2,30}:\s/.test(line)) || ''
+}
+
 // First sentence of the briefing, for cards
 export function briefExcerpt(text?: string | null, max = 140) {
     const first = (text || '').split(/(?<=[.!?])\s/)[0].trim()

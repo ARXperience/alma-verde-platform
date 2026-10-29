@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { ArrowUpRight, Loader2, MessageSquare, ShoppingCart, Sparkles } from 'lucide-react'
 import { PageHeader, ProjectThumb, StatusBadge } from '@/components/admin/ui'
 import { ACTIVE_STATUSES, PROJECT_STEPS, formatCOP, projectName, timeAgo } from '@/lib/projects/display'
+import { ORDER_STATUS, statusOf } from '@/lib/admin/labels'
 
 interface Project {
     id: string
@@ -22,10 +23,6 @@ interface Project {
 
 interface Order { id: string; order_number: string; customer_name: string; total: number; status: string; created_at: string }
 interface Lead { id: string; phone: string; name: string | null; last_message: string | null; intent: string | null; updated_at: string }
-
-const ORDER_LABELS: Record<string, string> = {
-    PENDING: 'Pendiente', PAID: 'Pagada', PROCESSING: 'Procesando', SHIPPED: 'Enviada', DELIVERED: 'Entregada', CANCELLED: 'Cancelada',
-}
 
 export default function AdminDashboard() {
     const { user } = useAuth()
@@ -168,7 +165,7 @@ export default function AdminDashboard() {
                             </div>
                             <div className="text-right">
                                 <p className="font-bold text-[#102216]">{formatCOP(Number(o.total))}</p>
-                                <p className="text-xs text-slate-500">{ORDER_LABELS[o.status] || o.status}</p>
+                                <p className="text-xs text-slate-500">{statusOf(ORDER_STATUS, o.status).label}</p>
                             </div>
                         </Link>
                     ))}

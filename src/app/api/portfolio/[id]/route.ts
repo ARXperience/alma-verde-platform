@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { requireStaff } from '@/lib/projects/access'
 
 function getSupabaseAdmin() {
     return createClient(
@@ -8,7 +9,7 @@ function getSupabaseAdmin() {
     )
 }
 
-// GET — Get a single portfolio item by ID
+// GET — Get a single portfolio item by ID (public page and admin editor)
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
@@ -27,6 +28,10 @@ export async function GET(
         if (!data) {
             return NextResponse.json({ error: 'Not found' }, { status: 404 })
         }
+        // Drafts are only visible to the team
+        if (!data.published_at && 'error' in (await requireStaff())) {
+            return NextResponse.json({ error: 'Not found' }, { status: 404 })
+        }
 
         return NextResponse.json({ data })
     } catch (error: any) {
@@ -40,6 +45,10 @@ export async function PUT(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    // Admin-only: these routes use the service key, so they must check the caller
+    const staff = await requireStaff()
+    if ('error' in staff) return staff.error
+
     try {
         const { id } = await params
         const body = await request.json()
@@ -80,6 +89,10 @@ export async function DELETE(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    // Admin-only: these routes use the service key, so they must check the caller
+    const staff = await requireStaff()
+    if ('error' in staff) return staff.error
+
     try {
         const { id } = await params
         const supabase = getSupabaseAdmin()
