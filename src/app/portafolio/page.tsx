@@ -141,18 +141,20 @@ export default function PortafolioPage() {
                                     src={project.featured_image_url || project.gallery_images?.[0] || '/placeholder.jpg'}
                                     alt={project.title}
                                     fill
-                                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                                    // Cards are tall or double-width and photos are landscape, so object-cover renders
+                                    // the photo much wider than one column; ask for a source that wide or it gets upscaled.
+                                    sizes="(max-width: 768px) 150vw, (max-width: 1280px) 100vw, 1100px"
                                     className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.045]"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/12 to-black/5 transition-colors duration-500 group-hover:from-black/94" />
-                                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-6 p-6 md:p-8">
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 from-5% via-black/55 via-40% to-black/0 to-75% transition-colors duration-500 group-hover:from-black/95" />
+                                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-6 p-6 drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)] md:p-8">
                                     <div className="max-w-xl">
                                         <span className="mb-3 inline-flex rounded-full border border-white/20 bg-black/20 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-[#61f694] backdrop-blur-md">
                                             {project.tags?.[0] || 'Proyecto'}
                                         </span>
                                         <h2 className="text-2xl font-bold leading-tight tracking-[-0.035em] text-white md:text-3xl">{project.title}</h2>
                                         {project.description && (
-                                            <p className="mt-3 line-clamp-2 max-w-lg text-sm leading-6 text-white/62">{excerpt(project.description)}</p>
+                                            <p className="mt-3 line-clamp-2 max-w-lg text-sm leading-6 text-white/85">{excerpt(project.description)}</p>
                                         )}
                                     </div>
                                     <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#13ec5b] text-[#07110a] transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1">
