@@ -1,897 +1,514 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { PaymentButton } from '@/components/payments/PaymentButton'
-import { Loader2, ArrowLeft, Download, RefreshCw, Image as ImageIcon, DollarSign, MapPin, Calendar, Package, CreditCard, MessageSquare, Paperclip, FileText, Send, User, Bot, Upload } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Input } from '@/components/ui/input'
-import { useAuth } from '@/contexts/AuthContext'
+import { Lightbox } from '@/components/ui/lightbox'
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
+    AlertCircle, ArrowLeft, Check, Clock, Download, FileText, Loader2, MapPin, Maximize2, MessageCircle,
+    Palette, Printer, Ruler, Sparkles, Star, Wand2,
+} from 'lucide-react'
+import { PROJECT_STEPS, briefExcerpt, formatCOP, formatDate, projectName, statusClass, statusLabel } from '@/lib/projects/display'
+import type { PricingBreakdown, QuotationVariables } from '@/types/quotation'
 
 interface Project {
     id: string
     title: string
+    project_number: string | null
     description: string
     project_type: string
     status: string
-    briefing: string
-    extracted_variables: any
-    pricing_breakdown: any
+    briefing: string | null
+    extracted_variables: Partial<QuotationVariables> | null
+    pricing_breakdown: Partial<PricingBreakdown> | null
     estimated_cost: number
     created_at: string
-    metadata: any
-    user_id: string
-}
-
-interface ProjectRender {
-    id: string
-    image_url: string
-    prompt: string
-    version: number
-    is_selected: boolean
-    created_at: string
+    metadata: { render_image?: string; render_images?: { url: string; version?: number }[] } | null
+    files?: ProjectFile[]
 }
 
 interface ProjectFile {
     id: string
     file_name: string
     file_url: string
-    file_type: string
     file_size: number
-    created_at: string
 }
 
-interface Message {
-    id: string
-    content: string
-    is_ai: boolean
-    is_internal: boolean
-    user_id: string
-    created_at: string
-    user?: {
-        email: string
-        name: string
-    }
-}
+type Render = { url: string; version: number }
+
+const VARIANT_IDEAS = ['Más madera natural', 'Iluminación cálida', 'Vista desde arriba', 'Más minimalista', 'Ambientado de noche']
 
 export default function ProjectDetailsPage() {
-    const { user } = useAuth()
     const params = useParams()
-    const router = useRouter()
     const projectId = params.id as string
 
     const [project, setProject] = useState<Project | null>(null)
-    const [renders, setRenders] = useState<ProjectRender[]>([])
-    const [files, setFiles] = useState<ProjectFile[]>([])
-    const [messages, setMessages] = useState<Message[]>([])
-
+    const [renders, setRenders] = useState<Render[]>([])
+    const [mainUrl, setMainUrl] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [sending, setSending] = useState(false)
-    const [newMessage, setNewMessage] = useState('')
 
-    // Regeneration state
-    const [regenerateOpen, setRegenerateOpen] = useState(false)
-    const [regenerateInstructions, setRegenerateInstructions] = useState('')
-    const [provider, setProvider] = useState<'dalle' | 'imagen' | 'both'>('dalle')
-    const [regenerating, setRegenerating] = useState(false)
-
-    const messagesEndRef = useRef<HTMLDivElement>(null)
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+    const [variantNote, setVariantNote] = useState('')
+    const [generating, setGenerating] = useState(false)
+    const [renderError, setRenderError] = useState('')
 
     useEffect(() => {
-        if (projectId) {
-            fetchProjectDetails()
-        }
+        if (projectId) fetchProject()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [projectId])
 
-    useEffect(() => {
-        scrollToBottom()
-    }, [messages])
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
-
-    async function fetchProjectDetails() {
+    async function fetchProject() {
         try {
             setLoading(true)
-
-            // Fetch project with related data
-            const { data: projectData, error: projectError } = await supabase
+            const { data, error } = await supabase
                 .from('projects')
-                .select(`
-                    *,
-                    files:project_files(*)
-                `)
+                .select('*, files:project_files(*)')
                 .eq('id', projectId)
                 .single()
+            if (error) throw error
+            const loaded = data as unknown as Project
+            setProject(loaded)
 
-            if (projectError) throw projectError
-
-            // Sort messages
-            // if (projectData.project_messages) {
-            //     projectData.project_messages.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-            // }
-
-            setProject(projectData)
-            setFiles(projectData.files || [])
-            setMessages(/* projectData.project_messages || */[])
-
-            // Fetch renders from DB separately or check metadata fallback
-            const { data: rendersData, error: rendersError } = await supabase
+            // Renders live in project_renders; older projects only have them in metadata
+            const { data: rowsData } = await supabase
                 .from('project_renders')
-                .select('*')
+                .select('image_url, version, is_selected')
                 .eq('project_id', projectId)
-                .order('version', { ascending: false })
-
-            if (!rendersError && rendersData && rendersData.length > 0) {
-                setRenders(rendersData)
-            } else {
-                // FALLBACK: Check metadata for images
-                const metadataImages = projectData.metadata?.render_images || [];
-                if (Array.isArray(metadataImages) && metadataImages.length > 0) {
-                    const mappedRenders: ProjectRender[] = metadataImages.map((img: any, index: number) => ({
-                        id: `meta-${index}-${Date.now()}`,
-                        image_url: img.url,
-                        prompt: img.prompt || 'Generado por IA',
-                        version: metadataImages.length - index,
-                        is_selected: index === 0,
-                        created_at: img.created_at || new Date().toISOString()
-                    }));
-                    setRenders(mappedRenders);
-                } else if (projectData.metadata?.render_image) {
-                    setRenders([{
-                        id: 'meta-single',
-                        image_url: projectData.metadata.render_image,
-                        prompt: 'Visualización Principal',
-                        version: 1,
-                        is_selected: true,
-                        created_at: new Date().toISOString()
-                    }]);
-                }
-            }
-        } catch (err: any) {
+                .order('version', { ascending: true })
+            const rows = (rowsData || []) as { image_url: string; version: number; is_selected: boolean }[]
+            const metadata = loaded.metadata || {}
+            const list: Render[] = rows.length
+                ? rows.map(r => ({ url: r.image_url, version: r.version }))
+                : (metadata.render_images || []).map((img, i) => ({ url: img.url, version: img.version || i + 1 }))
+            if (!list.length && metadata.render_image) list.push({ url: metadata.render_image, version: 1 })
+            setRenders(list)
+            setMainUrl(metadata.render_image || rows.find(r => r.is_selected)?.image_url || list[list.length - 1]?.url || null)
+        } catch (err) {
             console.error('Error fetching project:', err)
-            // Log full error object for debugging
-            console.error('Error details:', JSON.stringify(err, null, 2))
-
-            if (err.code === 'PGRST116') {
-                setError('Proyecto no encontrado o no tienes permiso para verlo.')
-            } else {
-                setError(err.message || 'Error al cargar el proyecto')
-            }
+            const { code, message } = err as { code?: string; message?: string }
+            setError(code === 'PGRST116' ? 'Proyecto no encontrado o no tienes permiso para verlo.' : message || 'Error al cargar el proyecto')
         } finally {
             setLoading(false)
         }
     }
 
-    async function handleSendMessage() {
-        if (!newMessage.trim() || !user) return
-
-        try {
-            setSending(true)
-            const { data: msg, error } = await supabase
-                .from('project_messages')
-                .insert({
-                    project_id: projectId,
-                    user_id: user.id,
-                    content: newMessage,
-                    is_internal: false
-                })
-                .select('*, user:users(id, full_name)')
-                .single()
-
-            if (error) throw error
-
-            setMessages([...messages, msg])
-            setNewMessage('')
-        } catch (error) {
-            console.error('Error sending message:', error)
-            // alert('Error al enviar mensaje')
-        } finally {
-            setSending(false)
-        }
-    }
-
-    async function handleDownloadFile(file: ProjectFile) {
-        if (file.file_url) {
-            window.open(file.file_url, '_blank')
-        }
-    }
-
-    async function handleSetMainRender(renderId: string, imageUrl: string) {
-        try {
-            setLoading(true)
-
-            // 1. Unset others
-            await supabase
-                .from('project_renders')
-                .update({ is_selected: false })
-                .eq('project_id', projectId)
-
-            // 2. Set new main
-            const { error } = await supabase
-                .from('project_renders')
-                .update({ is_selected: true })
-                .eq('id', renderId)
-
-            if (error) throw error
-
-            // 3. Update project metadata for dashboard preview
-            const currentMetadata = project?.metadata || {}
-            await supabase
-                .from('projects')
-                .update({
-                    metadata: {
-                        ...currentMetadata,
-                        render_image: imageUrl
-                    }
-                })
-                .eq('id', projectId)
-
-            // Refresh local state without full reload if possible, or just re-fetch
-            const updatedRenders = renders.map(r => ({
-                ...r,
-                is_selected: r.id === renderId
-            }))
-            setRenders(updatedRenders)
-
-            // alert('Render principal actualizado')
-        } catch (error) {
-            console.error('Error updating main render:', error)
-            alert('Error al actualizar render principal')
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    async function handleRegenerate() {
+    async function generateVersion() {
         if (!project) return
-
+        setGenerating(true)
+        setRenderError('')
         try {
-            setRegenerating(true)
-
             const res = await fetch('/api/quotation/generate-image-multi', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     projectId: project.id,
-                    projectDetails: {
-                        project_type: project.project_type,
-                        ...project.extracted_variables,
-                        description: project.briefing
-                    },
-                    instructions: regenerateInstructions,
-                    provider: provider
-                })
+                    projectDetails: { project_type: project.project_type, ...project.extracted_variables, description: project.briefing },
+                    instructions: variantNote,
+                }),
             })
-
-            if (!res.ok) {
-                const errorData = await res.json()
-                throw new Error(errorData.error || 'Error al regenerar la imagen')
-            }
-
-            // Refresh project details to get new renders
-            await fetchProjectDetails()
-
-            setRegenerateOpen(false)
-            setRegenerateInstructions('')
-            alert('Imagen regenerada con éxito')
-
-        } catch (error: any) {
-            console.error('Error regenerating image:', error)
-            alert(error.message || 'Error al regenerar imagen')
+            const data = await res.json().catch(() => ({}))
+            const url = data.images?.[0]?.url
+            if (!res.ok || !url) throw new Error(res.status < 500 && data.error ? data.error : 'No pudimos generar la imagen en este momento. Intenta de nuevo.')
+            // The image route makes the newest render the main one
+            setRenders(prev => [...prev, { url, version: (prev[prev.length - 1]?.version || 0) + 1 }])
+            setMainUrl(url)
+            setVariantNote('')
+        } catch (err) {
+            setRenderError((err as Error).message)
         } finally {
-            setRegenerating(false)
+            setGenerating(false)
         }
     }
 
-    async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
-        if (!event.target.files || event.target.files.length === 0) return
-
-        const file = event.target.files[0]
-        if (!file) return
-
-        try {
-            setLoading(true)
-            const formData = new FormData()
-            formData.append('file', file)
-            formData.append('bucket', 'project-files')
-            formData.append('path', `${projectId}/${Date.now()}-${file.name}`)
-
-            const uploadRes = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            })
-
-            if (!uploadRes.ok) {
-                const errorData = await uploadRes.json()
-                throw new Error(errorData.error || 'Error uploading file')
-            }
-
-            const { path: filePath } = await uploadRes.json()
-
-            // Insert into DB via API (RLS Bypass)
-            const dbRes = await fetch('/api/projects/files', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    project_id: projectId,
-                    file_name: file.name, // Changed key to file_name
-                    url: filePath,
-                    type: file.type,
-                    size: file.size
-                })
-            })
-
-            if (!dbRes.ok) {
-                const errorData = await dbRes.json()
-                throw new Error(errorData.error || 'Error saving file info')
-            }
-
-            const { data: fileData } = await dbRes.json()
-
-            setFiles([...files, fileData])
-        } catch (error: any) {
-            if (error?.message?.includes('AbortError') || error?.name === 'AbortError') return
-            console.error('Error fetching project:', error)
-            setError('Error al cargar los detalles del proyecto')
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    function formatCurrency(amount: number) {
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0,
-        }).format(amount)
-    }
-
-    function formatDate(dateString: string) {
-        return new Date(dateString).toLocaleDateString('es-CO', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
+    async function makeMain(url: string) {
+        const previous = mainUrl
+        setMainUrl(url)
+        const res = await fetch(`/api/projects/${projectId}/renders`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl: url }),
         })
-    }
-
-    function getStatusColor(status: string) {
-        const colors: Record<string, string> = {
-            cotizacion: 'bg-yellow-500',
-            draft: 'bg-gray-500',
-            pending: 'bg-yellow-500',
-            aprobado: 'bg-green-500',
-            en_produccion: 'bg-blue-500',
-            finalizado: 'bg-purple-500',
-            cancelado: 'bg-red-500',
+        if (!res.ok) {
+            setMainUrl(previous)
+            setRenderError('No se pudo cambiar la imagen principal. Intenta de nuevo.')
         }
-        return colors[status] || 'bg-gray-500'
-    }
-
-    function getStatusLabel(status: string) {
-        const labels: Record<string, string> = {
-            cotizacion: 'Cotización',
-            draft: 'Borrador',
-            pending: 'Pendiente',
-            aprobado: 'Aprobado',
-            en_produccion: 'En Producción',
-            finalizado: 'Finalizado',
-            cancelado: 'Cancelado',
-        }
-        return labels[status] || status
-    }
-
-    function formatBytes(bytes: number): string {
-        if (!bytes || bytes === 0) return '0 Bytes'
-        const k = 1024
-        const sizes = ['Bytes', 'KB', 'MB', 'GB']
-        const i = Math.floor(Math.log(bytes) / Math.log(k))
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
     }
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="min-h-screen grid place-items-center bg-[#0c1a11]">
+                <Loader2 className="h-8 w-8 animate-spin text-[#13ec5b]" />
             </div>
         )
     }
 
     if (error || !project) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800">
-                <Card className="max-w-md">
-                    <CardContent className="pt-6 text-center">
-                        <p className="text-red-600 mb-4">{error || 'Proyecto no encontrado'}</p>
-                        <Button onClick={() => router.push('/dashboard')}>
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Volver al Dashboard
-                        </Button>
-                    </CardContent>
-                </Card>
+            <div className="min-h-screen grid place-items-center bg-[#0c1a11] px-4 text-white">
+                <div className="max-w-md rounded-3xl bg-white/5 p-8 text-center ring-1 ring-white/10">
+                    <AlertCircle className="mx-auto mb-4 h-10 w-10 text-red-300" />
+                    <p className="mb-6 text-white/80">{error || 'Proyecto no encontrado'}</p>
+                    <Link href="/dashboard" className="inline-flex h-11 items-center gap-2 rounded-full bg-[#13ec5b] px-6 font-bold text-[#102216]">
+                        <ArrowLeft className="h-4 w-4" /> Mis proyectos
+                    </Link>
+                </div>
             </div>
         )
     }
 
-    const variables = project.extracted_variables || {}
+    const vars = project.extracted_variables || {}
     const pricing = project.pricing_breakdown || {}
+    const total = pricing.total || project.estimated_cost || 0
+    const name = projectName(project)
+    const urls = renders.map(r => r.url)
+    const mainIndex = mainUrl ? urls.indexOf(mainUrl) : -1
+    const stepIndex = PROJECT_STEPS.findIndex(s => s.id === project.status)
+    const files = project.files || []
+
+    const costLines: [string, number][] = ([
+        ['Diseño y base', pricing.base_cost],
+        ['Materiales', pricing.materials_cost],
+        ['Transporte', pricing.transport_cost],
+        ['Instalación', pricing.installation_cost],
+        ['Desmontaje', pricing.disassembly_cost],
+    ] as [string, number][]).filter(([, value]) => value > 0)
+
+    const specs = [
+        { icon: Ruler, label: 'Área', value: vars.square_meters ? `${vars.square_meters} m²` : null },
+        { icon: MapPin, label: 'Ubicación', value: vars.location },
+        { icon: Clock, label: 'Producción', value: vars.production_time ? `${vars.production_time} días` : null },
+        { icon: Palette, label: 'Estilo', value: vars.style_preferences },
+    ].filter(s => s.value)
+
+    const services = [
+        vars.requires_transport && 'Transporte',
+        vars.requires_installation && 'Instalación',
+        vars.requires_disassembly && 'Desmontaje',
+    ].filter(Boolean) as string[]
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800">
-            <div className="container mx-auto px-4 py-8">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-4">
-                        <Button variant="outline" onClick={() => router.push('/dashboard')} className="print:hidden">
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                                {project.title}
-                            </h1>
-                            <p className="text-gray-600 dark:text-gray-300">
-                                Creado el {formatDate(project.created_at)}
-                            </p>
+        <div className="min-h-screen bg-[#0c1a11] font-display text-white print:bg-white print:[&_*]:!text-black">
+            {/* Top bar over the hero */}
+            <header className="absolute inset-x-0 top-0 z-20 print:static">
+                <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-5 sm:px-6">
+                    <Link href="/dashboard" className="inline-flex h-10 items-center gap-2 rounded-full bg-black/40 px-4 text-sm font-semibold backdrop-blur-md transition-colors hover:bg-black/60 print:hidden">
+                        <ArrowLeft className="h-4 w-4" /> Mis proyectos
+                    </Link>
+                    <button onClick={() => window.print()} className="inline-flex h-10 items-center gap-2 rounded-full bg-black/40 px-4 text-sm font-semibold backdrop-blur-md transition-colors hover:bg-black/60 print:hidden">
+                        <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Descargar PDF</span>
+                    </button>
+                </div>
+            </header>
+
+            {/* Hero: the chosen render is the proposal's cover */}
+            <section className="relative h-[78vh] min-h-[520px] overflow-hidden print:h-auto print:min-h-0">
+                {mainUrl ? (
+                    <button className="absolute inset-0 h-full w-full cursor-zoom-in print:static" onClick={() => setLightboxIndex(mainIndex)} aria-label="Ver imagen en grande">
+                        <img key={mainUrl} src={mainUrl} alt={name} className="h-full w-full animate-fade-in object-cover" />
+                    </button>
+                ) : (
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(19,236,91,0.25),transparent_55%),linear-gradient(135deg,#123020,#0c1a11)]" />
+                )}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0c1a11] via-[#0c1a11]/30 to-black/40" />
+
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 print:static">
+                    <div className="pointer-events-auto mx-auto flex max-w-7xl flex-col gap-8 px-4 pb-10 sm:px-6 md:flex-row md:items-end md:justify-between md:pb-14">
+                        <div className="max-w-3xl">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-black/40 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#13ec5b] backdrop-blur-md">
+                                    Propuesta {project.project_number || ''}
+                                </span>
+                                <span className={`rounded-full px-3 py-1 text-xs font-bold ring-1 backdrop-blur-md ${statusClass(project.status)}`}>
+                                    {statusLabel(project.status)}
+                                </span>
+                            </div>
+                            <h1 className="mt-4 text-4xl font-black tracking-tight drop-shadow-lg md:text-6xl">{name}</h1>
+                            {project.briefing && <p className="mt-4 max-w-2xl text-lg text-white/75 drop-shadow">{briefExcerpt(project.briefing, 220)}</p>}
+                            <div className="mt-5 flex flex-wrap gap-2">
+                                {specs.map(s => (
+                                    <span key={s.label} className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-sm backdrop-blur-md">
+                                        <s.icon className="h-3.5 w-3.5 text-[#13ec5b]" /> {s.value}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-4 md:items-end">
+                            <div className="md:text-right">
+                                <p className="text-xs font-semibold uppercase tracking-widest text-white/50">Inversión estimada</p>
+                                <p className="text-4xl font-black text-[#13ec5b] drop-shadow-[0_0_18px_rgba(19,236,91,0.35)] md:text-5xl">{formatCOP(total)}</p>
+                            </div>
+                            {mainUrl ? (
+                                <button onClick={() => setLightboxIndex(mainIndex)} className="inline-flex h-12 items-center gap-2 self-start rounded-full bg-white px-6 text-sm font-bold text-[#102216] transition-colors hover:bg-[#13ec5b] md:self-end print:hidden">
+                                    <Maximize2 className="h-4 w-4" /> Ver en grande
+                                </button>
+                            ) : (
+                                <a href="#propuesta-visual" className="inline-flex h-12 items-center gap-2 self-start rounded-full bg-[#13ec5b] px-6 text-sm font-bold text-[#102216] md:self-end print:hidden">
+                                    <Wand2 className="h-4 w-4" /> Generar visualización
+                                </a>
+                            )}
                         </div>
                     </div>
-                    <Badge className={getStatusColor(project.status)}>
-                        {getStatusLabel(project.status)}
-                    </Badge>
                 </div>
+            </section>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
+            <main className="mx-auto max-w-7xl px-4 pb-24 sm:px-6">
+                {/* Progress */}
+                <section className="rounded-3xl bg-white/[0.04] p-6 ring-1 ring-white/10 md:p-8">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Estado del proyecto</p>
+                    {project.status === 'cancelado' ? (
+                        <p className="mt-4 text-red-200">Este proyecto fue cancelado. Escríbenos si quieres retomarlo.</p>
+                    ) : (
+                        <ol className="mt-6 grid grid-cols-3 gap-y-6 md:grid-cols-6">
+                            {PROJECT_STEPS.map((step, i) => {
+                                const done = i < stepIndex
+                                const current = i === stepIndex
+                                return (
+                                    <li key={step.id} className="relative flex flex-col items-center text-center">
+                                        {i > 0 && <span className={`absolute right-1/2 top-4 hidden h-0.5 w-full md:block ${i <= stepIndex ? 'bg-[#13ec5b]' : 'bg-white/10'}`} />}
+                                        <span className={`relative grid h-8 w-8 place-items-center rounded-full text-xs font-black ${current ? 'bg-[#13ec5b] text-[#102216] shadow-[0_0_0_6px_rgba(19,236,91,0.15)]' : done ? 'bg-[#0a8c35] text-white' : 'bg-white/10 text-white/40'}`}>
+                                            {done ? <Check className="h-4 w-4" /> : i + 1}
+                                        </span>
+                                        <span className={`mt-2 text-xs font-semibold md:text-sm ${current ? 'text-white' : done ? 'text-white/70' : 'text-white/35'}`}>{step.label}</span>
+                                    </li>
+                                )
+                            })}
+                        </ol>
+                    )}
+                </section>
 
-                        <Tabs defaultValue="info" className="w-full">
-                            <TabsList className="w-full grid grid-cols-4 mb-4">
-                                <TabsTrigger value="info">Información</TabsTrigger>
-                                <TabsTrigger value="renders">Renders</TabsTrigger>
-                                <TabsTrigger value="files">Archivos ({files.length})</TabsTrigger>
-                                <TabsTrigger value="messages">Mensajes ({messages.length})</TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="info">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Información del Proyecto</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div>
-                                            <label className="text-sm font-medium text-gray-600">Descripción</label>
-                                            <p className="text-gray-900 dark:text-white mt-1">{project.description}</p>
-                                        </div>
-
-                                        {project.briefing && (
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-600">Briefing Original</label>
-                                                <p className="text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap">
-                                                    {project.briefing}
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-600">Tipo de Proyecto</label>
-                                                <p className="text-gray-900 dark:text-white mt-1 capitalize">
-                                                    {project.project_type}
-                                                </p>
-                                            </div>
-                                            {variables.square_meters && (
-                                                <div>
-                                                    <label className="text-sm font-medium text-gray-600">Área</label>
-                                                    <p className="text-gray-900 dark:text-white mt-1">
-                                                        {variables.square_meters} m²
-                                                    </p>
-                                                </div>
-                                            )}
-                                            {variables.location && (
-                                                <div>
-                                                    <label className="text-sm font-medium text-gray-600">Ubicación</label>
-                                                    <p className="text-gray-900 dark:text-white mt-1">{variables.location}</p>
-                                                </div>
-                                            )}
-                                            {variables.production_time && (
-                                                <div>
-                                                    <label className="text-sm font-medium text-gray-600">Tiempo de Producción</label>
-                                                    <p className="text-gray-900 dark:text-white mt-1">
-                                                        {variables.production_time} días
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {variables.materials && variables.materials.length > 0 && (
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-600">Materiales</label>
-                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                    {variables.materials.map((material: string, i: number) => (
-                                                        <Badge key={i} variant="secondary">{material}</Badge>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            <TabsContent value="renders">
-                                <Card>
-                                    <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                            <CardTitle className="flex items-center gap-2">
-                                                <ImageIcon className="h-5 w-5" />
-                                                Visualizaciones Generadas
-                                            </CardTitle>
-                                            <Button variant="outline" size="sm" onClick={() => setRegenerateOpen(true)} className="print:hidden">
-                                                <RefreshCw className="h-4 w-4 mr-2" />
-                                                Regenerar
-                                            </Button>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {renders.length > 0 ? (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                {renders.map((render) => (
-                                                    <div key={render.id} className="relative group">
-                                                        <img
-                                                            src={render.image_url}
-                                                            alt={`Render versión ${render.version}`}
-                                                            className="w-full h-auto rounded-lg border border-gray-200"
-                                                        />
-                                                        <div className="absolute top-2 right-2">
-                                                            <Badge variant="secondary">v{render.version}</Badge>
-                                                        </div>
-                                                        {render.is_selected && (
-                                                            <div className="absolute top-2 left-2">
-                                                                <Badge className="bg-green-500">Seleccionado</Badge>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-8 text-muted-foreground">
-                                                No hay visualizaciones disponibles
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            <TabsContent value="files">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Paperclip className="h-5 w-5" />
-                                            Archivos del Proyecto
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {files.length === 0 ? (
-                                            <div className="text-center py-8 text-muted-foreground">
-                                                No hay archivos compartidos por el equipo aún.
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {files.map((file) => (
-                                                    <div key={file.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow transition-all">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="p-2 bg-blue-100 text-blue-600 rounded">
-                                                                <FileText className="w-5 h-5" />
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <p className="text-sm font-medium">{file.file_name}</p>
-                                                                <p className="text-xs text-muted-foreground">{formatBytes(file.file_size)}</p>
-                                                            </div>
-                                                        </div>
-                                                        <Button size="icon" variant="ghost" onClick={() => handleDownloadFile(file)}>
-                                                            <Download className="w-5 h-5" />
-                                                        </Button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            <TabsContent value="messages">
-                                <Card className="h-[500px] flex flex-col">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <MessageSquare className="h-5 w-5" />
-                                            Chat con Alma Verde
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="flex-1 flex flex-col p-0">
-                                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                            {messages.length === 0 ? (
-                                                <div className="text-center py-12 text-muted-foreground">
-                                                    Envía un mensaje para comenzar a chatear con nuestro equipo.
-                                                </div>
-                                            ) : (
-                                                messages.map((msg) => (
-                                                    <div
-                                                        key={msg.id}
-                                                        className={`flex gap-3 ${msg.user_id === user?.id ? 'flex-row-reverse' : ''}`}
-                                                    >
-                                                        <div className={`
-                                                            w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
-                                                            ${msg.is_ai ? 'bg-purple-100 text-purple-600' :
-                                                                msg.user_id === user?.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}
-                                                        `}>
-                                                            {msg.is_ai ? <Bot size={16} /> : <User size={16} />}
-                                                        </div>
-                                                        <div className={`
-                                                            max-w-[70%] p-3 rounded-lg text-sm
-                                                            ${msg.user_id === user?.id
-                                                                ? 'bg-blue-600 text-white rounded-br-none'
-                                                                : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-none shadow-sm'}
-                                                        `}>
-                                                            <div className="flex justify-between items-baseline gap-2 mb-1 opacity-80 text-xs">
-                                                                <span className="font-semibold">{msg.user_id === user?.id ? 'Tú' : (msg.is_ai ? 'Alma Verde AI' : 'Equipo Alma Verde')}</span>
-                                                                <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                            </div>
-                                                            <p>{msg.content}</p>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                            <div ref={messagesEndRef} />
-                                        </div>
-                                        <div className="p-4 border-t bg-white dark:bg-gray-800">
-                                            <form
-                                                onSubmit={(e) => {
-                                                    e.preventDefault()
-                                                    handleSendMessage()
-                                                }}
-                                                className="flex gap-2"
-                                            >
-                                                <Input
-                                                    value={newMessage}
-                                                    onChange={(e) => setNewMessage(e.target.value)}
-                                                    placeholder="Escribe un mensaje..."
-                                                    className="flex-1"
-                                                    disabled={sending}
-                                                />
-                                                <Button type="submit" disabled={sending || !newMessage.trim()}>
-                                                    {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                                </Button>
-                                            </form>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                        </Tabs>
+                {/* Visual proposal */}
+                <section id="propuesta-visual" className="mt-20 scroll-mt-8">
+                    <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#13ec5b]">Propuesta visual</p>
+                            <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Así podría verse tu proyecto</h2>
+                        </div>
+                        {renders.length > 0 && (
+                            <p className="text-white/50">{renders.length} {renders.length === 1 ? 'versión' : 'versiones'} · toca una para verla en grande</p>
+                        )}
                     </div>
 
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Pricing */}
-                        {pricing && pricing.total && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <DollarSign className="h-5 w-5" />
-                                        Cotización
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    {pricing.base_cost && (
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-gray-600">Costo Base</span>
-                                            <span className="font-medium">{formatCurrency(pricing.base_cost)}</span>
-                                        </div>
-                                    )}
-                                    {pricing.materials_cost && (
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-gray-600">Materiales</span>
-                                            <span className="font-medium">{formatCurrency(pricing.materials_cost)}</span>
-                                        </div>
-                                    )}
-                                    {pricing.transport_cost > 0 && (
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-gray-600">Transporte</span>
-                                            <span className="font-medium">{formatCurrency(pricing.transport_cost)}</span>
-                                        </div>
-                                    )}
-                                    {pricing.installation_cost > 0 && (
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-gray-600">Instalación</span>
-                                            <span className="font-medium">{formatCurrency(pricing.installation_cost)}</span>
-                                        </div>
-                                    )}
-                                    <div className="border-t pt-3 flex justify-between font-bold">
-                                        <span>Total</span>
-                                        <span className="text-green-600">{formatCurrency(pricing.total)}</span>
+                    {(renders.length > 0 || generating) && (
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {renders.map((render, i) => {
+                                const isMain = render.url === mainUrl
+                                return (
+                                    <figure key={render.url} className={`group relative aspect-video overflow-hidden rounded-2xl ring-2 transition-all ${isMain ? 'ring-[#13ec5b]' : 'ring-white/10 hover:ring-white/30'}`}>
+                                        <button className="h-full w-full cursor-zoom-in" onClick={() => setLightboxIndex(i)} aria-label={`Ver versión ${render.version} en grande`}>
+                                            <img src={render.url} alt={`${name}, versión ${render.version}`} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                        </button>
+                                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                        <figcaption className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2">
+                                            <span className="text-sm font-black drop-shadow">Versión {render.version}</span>
+                                            {isMain ? (
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-[#13ec5b] px-2.5 py-1 text-xs font-bold text-[#102216]">
+                                                    <Star className="h-3 w-3 fill-current" /> Principal
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => makeMain(render.url)}
+                                                    className="rounded-full bg-black/60 px-3 py-1 text-xs font-semibold backdrop-blur-md transition-colors hover:bg-[#13ec5b] hover:text-[#102216] md:opacity-0 md:group-hover:opacity-100 print:hidden"
+                                                >
+                                                    Usar como principal
+                                                </button>
+                                            )}
+                                        </figcaption>
+                                    </figure>
+                                )
+                            })}
+                            {generating && (
+                                <div className="grid aspect-video place-items-center rounded-2xl border border-dashed border-[#13ec5b]/50 bg-[#13ec5b]/5 text-center">
+                                    <div>
+                                        <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-[#13ec5b]" />
+                                        <p className="font-semibold">Diseñando una nueva versión…</p>
+                                        <p className="text-sm text-white/50">Tarda entre 20 y 40 segundos</p>
                                     </div>
-                                </CardContent>
-                            </Card>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* New version */}
+                    <div className="mt-6 rounded-3xl bg-white/[0.04] p-5 ring-1 ring-white/10 md:p-6 print:hidden">
+                        <form
+                            className="flex flex-col gap-3 md:flex-row"
+                            onSubmit={(e) => {
+                                e.preventDefault()
+                                generateVersion()
+                            }}
+                        >
+                            <input
+                                value={variantNote}
+                                onChange={(e) => setVariantNote(e.target.value)}
+                                disabled={generating}
+                                placeholder={renders.length ? '¿Qué cambiarías? Ej: más plantas, colores de mi marca…' : 'Describe algún detalle que quieras ver (opcional)'}
+                                className="h-12 flex-1 rounded-xl border border-white/10 bg-black/30 px-4 text-white placeholder:text-white/35 focus:border-[#13ec5b] focus:outline-none"
+                            />
+                            <button
+                                type="submit"
+                                disabled={generating}
+                                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#13ec5b] px-6 font-bold text-[#102216] transition-opacity disabled:opacity-50"
+                            >
+                                {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                                {renders.length ? 'Generar nueva versión' : 'Generar visualización'}
+                            </button>
+                        </form>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            {VARIANT_IDEAS.map(idea => (
+                                <button
+                                    key={idea}
+                                    type="button"
+                                    disabled={generating}
+                                    onClick={() => setVariantNote(note => (note ? `${note}, ${idea.toLowerCase()}` : idea))}
+                                    className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-white/70 ring-1 ring-white/10 transition-colors hover:bg-white/10 hover:text-white"
+                                >
+                                    + {idea}
+                                </button>
+                            ))}
+                        </div>
+                        {renderError && (
+                            <p className="mt-3 flex items-start gap-2 text-sm text-red-300">
+                                <AlertCircle className="mt-0.5 h-4 w-4 flex-none" /> {renderError}
+                            </p>
+                        )}
+                    </div>
+                </section>
+
+                {/* Concept + investment */}
+                <section className="mt-20 grid grid-cols-1 gap-8 lg:grid-cols-12">
+                    <div className="space-y-10 lg:col-span-7">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#13ec5b]">El concepto</p>
+                            <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Lo que nos pediste</h2>
+                            <p className="mt-6 whitespace-pre-line text-lg leading-relaxed text-white/75">{project.briefing || project.description}</p>
+                        </div>
+
+                        {!!vars.materials?.length && (
+                            <div>
+                                <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-white/50">Materiales</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {vars.materials.map((m: string) => (
+                                        <span key={m} className="rounded-full bg-[#13ec5b]/10 px-4 py-2 text-sm font-medium capitalize text-[#13ec5b] ring-1 ring-[#13ec5b]/25">{m}</span>
+                                    ))}
+                                </div>
+                            </div>
                         )}
 
-                        {/* Payments - NEW SECTION */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <CreditCard className="h-5 w-5" />
-                                    Pagos
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 rounded-md text-sm">
-                                    Para iniciar la producción, se requiere un anticipo del 50%.
-                                </div>
-                                <div className="flex justify-between items-center font-medium">
-                                    <span>Anticipo (50%)</span>
-                                    <span>{formatCurrency((pricing.total || 0) * 0.5)}</span>
-                                </div>
-                                <PaymentButton
-                                    projectId={project.id}
-                                    amount={(pricing.total || 0) * 0.5}
-                                    label="Pagar Anticipo con Bold"
-                                    className="w-full bg-blue-600 hover:bg-blue-700"
-                                />
-                            </CardContent>
-                        </Card>
+                        {(specs.length > 0 || services.length > 0) && (
+                            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-white/10 ring-1 ring-white/10 sm:grid-cols-3">
+                                {[
+                                    { label: 'Tipo', value: project.project_type?.replace(/_/g, ' ') },
+                                    ...specs,
+                                    { label: 'Incluye', value: services.join(', ') || null },
+                                    { label: 'Creado', value: formatDate(project.created_at) },
+                                ].filter(item => item.value).map(item => (
+                                    <div key={item.label} className="bg-[#0f2116] p-5">
+                                        <dt className="text-xs font-semibold uppercase tracking-widest text-white/45">{item.label}</dt>
+                                        <dd className="mt-1 font-bold capitalize">{item.value}</dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        )}
 
-                        {/* Actions */}
-                        <Card className="print:hidden">
-                            <CardHeader>
-                                <CardTitle>Acciones</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-2">
-                                <Button className="w-full" variant="outline" onClick={() => window.print()}>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Exportar PDF
-                                </Button>
-                                <Button className="w-full" variant="outline" onClick={() => setRegenerateOpen(true)}>
-                                    <RefreshCw className="mr-2 h-4 w-4" />
-                                    Regenerar Imagen
-                                </Button>
-                            </CardContent>
-                        </Card>
+                        {!!vars.special_requirements?.length && (
+                            <div>
+                                <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-white/50">Requerimientos especiales</h3>
+                                <ul className="space-y-2">
+                                    {vars.special_requirements.map((r: string) => (
+                                        <li key={r} className="flex gap-3 text-white/75"><Check className="mt-1 h-4 w-4 flex-none text-[#13ec5b]" /> {r}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {files.length > 0 && (
+                            <div>
+                                <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-white/50">Archivos del equipo</h3>
+                                <div className="space-y-2">
+                                    {files.map(file => (
+                                        <a key={file.id} href={file.file_url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-4 rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10 transition-colors hover:bg-white/[0.08]">
+                                            <span className="flex min-w-0 items-center gap-3">
+                                                <FileText className="h-5 w-5 flex-none text-[#13ec5b]" />
+                                                <span className="truncate font-medium">{file.file_name}</span>
+                                            </span>
+                                            <Download className="h-4 w-4 flex-none text-white/50" />
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </div>
+
+                    {/* Investment */}
+                    <aside className="lg:col-span-5">
+                        <div className="space-y-4 lg:sticky lg:top-8">
+                            <div className="rounded-3xl bg-white/[0.04] p-6 ring-1 ring-white/10 md:p-8">
+                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#13ec5b]">Inversión</p>
+                                <div className="mt-6 space-y-3">
+                                    {costLines.map(([label, value]) => (
+                                        <div key={label} className="flex justify-between gap-4 text-white/70">
+                                            <span>{label}</span><span className="font-semibold text-white">{formatCOP(value)}</span>
+                                        </div>
+                                    ))}
+                                    {!!pricing.subtotal && (
+                                        <div className="flex justify-between gap-4 border-t border-white/10 pt-3 text-white/70">
+                                            <span>Subtotal</span><span className="font-semibold text-white">{formatCOP(pricing.subtotal)}</span>
+                                        </div>
+                                    )}
+                                    {!!pricing.tax && (
+                                        <div className="flex justify-between gap-4 text-white/70">
+                                            <span>IVA</span><span className="font-semibold text-white">{formatCOP(pricing.tax)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-6 flex items-end justify-between gap-4 border-t border-white/10 pt-6">
+                                    <span className="font-bold">Total</span>
+                                    <span className="text-3xl font-black text-[#13ec5b]">{formatCOP(total)}</span>
+                                </div>
+                                {!!pricing.notes?.length && (
+                                    <details className="group mt-6 rounded-2xl bg-black/20 p-4">
+                                        <summary className="cursor-pointer list-none text-sm font-semibold text-white/70">
+                                            <span className="inline-flex items-center gap-2"><Sparkles className="h-4 w-4 text-[#13ec5b]" /> Cómo se calculó</span>
+                                        </summary>
+                                        <ul className="mt-3 space-y-2 text-sm text-white/60">
+                                            {pricing.notes.map((note: string) => <li key={note}>· {note}</li>)}
+                                        </ul>
+                                    </details>
+                                )}
+                            </div>
+
+                            {total > 0 && project.status !== 'cancelado' && (
+                                <div className="rounded-3xl bg-gradient-to-br from-[#13ec5b]/15 to-[#0a8c35]/5 p-6 ring-1 ring-[#13ec5b]/25 md:p-8 print:hidden">
+                                    <p className="font-bold">¿Listo para empezar?</p>
+                                    <p className="mt-1 text-sm text-white/60">Con un anticipo del 50% iniciamos el diseño y la producción.</p>
+                                    <div className="mt-4 flex items-center justify-between">
+                                        <span className="text-white/70">Anticipo</span>
+                                        <span className="text-xl font-black">{formatCOP(total * 0.5)}</span>
+                                    </div>
+                                    <PaymentButton
+                                        projectId={project.id}
+                                        amount={total * 0.5}
+                                        label="Pagar anticipo con Bold"
+                                        className="mt-4 h-12 w-full rounded-xl bg-[#13ec5b] font-bold text-[#102216] hover:bg-[#13ec5b]/90"
+                                    />
+                                </div>
+                            )}
+
+                            <p className="flex items-center justify-center gap-2 text-sm text-white/50 print:hidden">
+                                <MessageCircle className="h-4 w-4" />
+                                ¿Quieres ajustar algo? <Link href="/contacto" className="font-semibold text-[#13ec5b] hover:underline">Habla con un asesor</Link>
+                            </p>
+                        </div>
+                    </aside>
+                </section>
+            </main>
+
+            <div className="print:hidden">
+                <Lightbox images={urls} index={lightboxIndex} onChange={setLightboxIndex} alt={name} downloadable />
             </div>
-
-            {/* Regeneration Dialog */}
-            <Dialog open={regenerateOpen} onOpenChange={setRegenerateOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Regenerar Visualización 3D</DialogTitle>
-                        <DialogDescription>
-                            Genera una nueva versión de la visualización. Puedes agregar instrucciones específicas.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>Instrucciones Adicionales</Label>
-                            <Textarea
-                                placeholder="Ej: Hazlo más futurista, cambia el color a azul, agrega más iluminación..."
-                                value={regenerateInstructions}
-                                onChange={(e) => setRegenerateInstructions(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Modelo de IA</Label>
-                            <Select
-                                value={provider}
-                                onValueChange={(val: any) => setProvider(val)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Selecciona un modelo" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="dalle">DALL-E 3 (OpenAI)</SelectItem>
-                                    <SelectItem value="imagen">Gemini Imagen 3</SelectItem>
-                                    <SelectItem value="both">Ambos (Comparar)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setRegenerateOpen(false)}>
-                            Cancelar
-                        </Button>
-                        <Button onClick={handleRegenerate} disabled={regenerating}>
-                            {regenerating ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Generando...
-                                </>
-                            ) : (
-                                <>
-                                    <RefreshCw className="mr-2 h-4 w-4" />
-                                    Generar
-                                </>
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-            {/* Regenerate Dialog */}
-            <Dialog open={regenerateOpen} onOpenChange={setRegenerateOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Regenerar Visualización</DialogTitle>
-                        <DialogDescription>
-                            Describe los cambios que deseas ver en la nueva imagen o deja en blanco para usar el briefing original con variaciones.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>Instrucciones Adicionales (Opcional)</Label>
-                            <Textarea
-                                placeholder="Ej: Cambiar el color de las paredes a blanco, hacer la iluminación más cálida..."
-                                value={regenerateInstructions}
-                                onChange={(e) => setRegenerateInstructions(e.target.value)}
-                            />
-                        </div>
-                        {/* 
-                        <div className="space-y-2">
-                            <Label>Modelo AI</Label>
-                            <Select value={provider} onValueChange={(v: any) => setProvider(v)}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="dalle">DALL-E 3 (Calidad Alta)</SelectItem>
-                                    <SelectItem value="imagen">Imagen 2 (Rápido)</SelectItem> 
-                                </SelectContent>
-                            </Select>
-                        </div> 
-                        */}
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setRegenerateOpen(false)} disabled={regenerating}>
-                            Cancelar
-                        </Button>
-                        <Button onClick={handleRegenerate} disabled={regenerating}>
-                            {regenerating ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Generando...
-                                </>
-                            ) : (
-                                <>
-                                    <RefreshCw className="mr-2 h-4 w-4" />
-                                    Regenerar
-                                </>
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </div>
     )
 }

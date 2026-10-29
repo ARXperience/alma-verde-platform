@@ -8,9 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles, Send, Loader2, CheckCircle, AlertCircle, Mic, FileText, Image as ImageIcon } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Lightbox } from '@/components/ui/lightbox'
+import { Sparkles, Send, Loader2, CheckCircle, AlertCircle, Mic, FileText, Image as ImageIcon, Maximize2, Wand2 } from 'lucide-react'
 import type { QuotationVariables, PricingBreakdown } from '@/types/quotation'
-import { supabase } from '@/lib/supabase/client'
+import { briefExcerpt, projectName } from '@/lib/projects/display'
 
 type Step = 'briefing' | 'processing' | 'review' | 'pricing' | 'complete'
 
@@ -23,10 +25,16 @@ export default function QuotationPage() {
     const [variables, setVariables] = useState<QuotationVariables | null>(null)
     const [pricing, setPricing] = useState<PricingBreakdown | null>(null)
     const [projectId, setProjectId] = useState<string | null>(null)
-    const [renderImageUrl, setRenderImageUrl] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
-    const [generatingImage, setGeneratingImage] = useState(false)
     const [error, setError] = useState('')
+
+    // Renders of the draft project: the client can ask for several versions before confirming
+    const [renders, setRenders] = useState<string[]>([])
+    const [activeRender, setActiveRender] = useState<string | null>(null)
+    const [generatingImage, setGeneratingImage] = useState(false)
+    const [imageError, setImageError] = useState('')
+    const [variantNote, setVariantNote] = useState('')
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
     // Audio recording state
     const [isRecording, setIsRecording] = useState(false)
@@ -183,8 +191,8 @@ export default function QuotationPage() {
 
             setStep('pricing') // Move to pricing step immediately
 
-            // 3. Trigger Image Generation in Background (DALL-E)
-            triggerImageGeneration(project.id, variables)
+            // 3. First render in the background (the pricing is already visible)
+            generateRender(project.id)
 
         } catch (err: any) {
             setError(err.message || 'Error al procesar la solicitud')
@@ -193,30 +201,31 @@ export default function QuotationPage() {
         }
     }
 
-    async function triggerImageGeneration(pId: string, vars: QuotationVariables) {
+    async function generateRender(pId: string, instructions = '') {
+        if (!variables) return
         setGeneratingImage(true)
+        setImageError('')
         try {
-            const imageRes = await fetch('/api/quotation/generate-image-multi', {
+            const res = await fetch('/api/quotation/generate-image-multi', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     projectId: pId,
-                    projectDetails: {
-                        ...vars,
-                        description: briefing
-                    },
-                    provider: 'dalle',
-                    instructions: ''
+                    projectDetails: { ...variables, description: briefing },
+                    instructions,
                 }),
             })
-
-            if (imageRes.ok) {
-                const data = await imageRes.json()
-                const imageUrl = data.images?.[0]?.url
-                if (imageUrl) setRenderImageUrl(imageUrl)
+            const data = await res.json().catch(() => ({}))
+            const url = data.images?.[0]?.url
+            if (!res.ok || !url) {
+                // 4xx messages are written for the client (limit reached, session expired…)
+                throw new Error(res.status < 500 && data.error ? data.error : 'No pudimos generar la imagen en este momento. Intenta de nuevo.')
             }
-        } catch (imgError) {
-            console.error('Error generating image:', imgError)
+            setRenders(prev => [...prev, url])
+            setActiveRender(url)
+            setVariantNote('')
+        } catch (err: any) {
+            setImageError(err.message)
         } finally {
             setGeneratingImage(false)
         }
@@ -226,32 +235,21 @@ export default function QuotationPage() {
         if (!projectId) return
 
         setLoading(true)
+        setError('')
         try {
-            // Update project status to QUOTATION (confirmed)
-            const { error } = await supabase
-                .from('projects')
-                .update({ status: 'cotizacion' })
-                .eq('id', projectId)
-
-            if (error) throw error
-
-            // Show success screen immediately
-            setStep('complete')
-
-        } catch (err: any) {
-            // Ignore AbortError from navigation
-            if (err?.message?.includes('AbortError') || err?.name === 'AbortError') return
-
-            console.error('Error finalizando proyecto:', err)
-
-            // More detailed error logging
-            if (typeof err === 'object' && err !== null) {
-                try {
-                    console.error('Detalles del error:', JSON.stringify(err, null, 2))
-                } catch (e) { /* ignore */ }
+            // The newest render is the main one by default; keep the version the client picked instead
+            if (activeRender && activeRender !== renders[renders.length - 1]) {
+                const res = await fetch(`/api/projects/${projectId}/renders`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageUrl: activeRender }),
+                })
+                if (!res.ok) throw new Error('No se pudo guardar la imagen elegida. Intenta de nuevo.')
             }
-
+            setStep('complete')
+        } catch (err: any) {
             setError(err?.message || 'Error al finalizar el proyecto. Intenta de nuevo.')
+        } finally {
             setLoading(false)
         }
     }
@@ -287,7 +285,44 @@ export default function QuotationPage() {
 
     return (
         <div className="h-screen bg-[#102216] relative overflow-hidden font-display text-white flex">
-            {/* LEFT SIDE: Full Video Background */}
+            {/* LEFT SIDE: the proposal render once there is one, the brand video before */}
+            {activeRender && (step === 'pricing' || step === 'complete') ? (
+                <div className="hidden lg:block flex-1 relative overflow-hidden">
+                    <img
+                        key={activeRender}
+                        src={activeRender}
+                        alt="Propuesta visual de tu proyecto"
+                        className="absolute inset-0 w-full h-full object-cover animate-fade-in"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#102216] via-[#102216]/5 to-[#102216]/40" />
+                    <div className="absolute top-0 right-0 bottom-0 w-32 bg-gradient-to-l from-[#102216]/90 to-transparent" />
+
+                    {generatingImage && (
+                        <div className="absolute top-8 left-10 z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-sm font-medium">
+                            <Loader2 className="w-4 h-4 animate-spin text-[#13ec5b]" />
+                            Diseñando una nueva versión…
+                        </div>
+                    )}
+
+                    <div className="absolute bottom-10 left-10 right-40 z-10">
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-xs font-bold uppercase tracking-widest text-[#13ec5b]">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Propuesta visual · Versión {renders.indexOf(activeRender) + 1} de {renders.length}
+                        </span>
+                        <h2 className="mt-4 text-4xl xl:text-5xl font-black tracking-tight drop-shadow-lg">
+                            {variables ? projectName({ extracted_variables: variables }) : 'Tu proyecto'}
+                        </h2>
+                        <p className="mt-2 max-w-xl text-white/75 line-clamp-2 drop-shadow">{briefExcerpt(briefing, 180)}</p>
+                        <button
+                            onClick={() => setLightboxIndex(renders.indexOf(activeRender))}
+                            className="mt-6 inline-flex items-center gap-2 h-11 px-5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/15 text-sm font-semibold transition-colors"
+                        >
+                            <Maximize2 className="w-4 h-4" />
+                            Ver en grande
+                        </button>
+                    </div>
+                </div>
+            ) : (
             <div className="hidden lg:flex flex-1 relative items-center justify-center">
                 {/* Video */}
                 <video
@@ -310,12 +345,26 @@ export default function QuotationPage() {
                         <Sparkles className="w-4 h-4 text-[#13ec5b]" />
                         <span className="text-white">Alma Verde Diseño</span>
                     </div>
-                    <h2 className="text-4xl xl:text-5xl font-black tracking-tight mb-4 drop-shadow-lg">
-                        Cotiza tu Proyecto<br/>con <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#13ec5b] to-[#0a8c35]">IA</span>
-                    </h2>
-                    <p className="text-lg text-white/70 max-w-md mx-auto">
-                        Describe tu proyecto y nuestra inteligencia artificial generará una cotización detallada
-                    </p>
+                    {generatingImage ? (
+                        <>
+                            <h2 className="text-4xl xl:text-5xl font-black tracking-tight mb-4 drop-shadow-lg">
+                                Diseñando tu<br />propuesta visual
+                            </h2>
+                            <p className="text-lg text-white/70 max-w-md mx-auto inline-flex items-center gap-2">
+                                <Loader2 className="w-5 h-5 animate-spin text-[#13ec5b]" />
+                                La IA está creando el render de tu proyecto…
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <h2 className="text-4xl xl:text-5xl font-black tracking-tight mb-4 drop-shadow-lg">
+                                Cotiza tu Proyecto<br/>con <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#13ec5b] to-[#0a8c35]">IA</span>
+                            </h2>
+                            <p className="text-lg text-white/70 max-w-md mx-auto">
+                                Describe tu proyecto y nuestra inteligencia artificial generará una cotización detallada
+                            </p>
+                        </>
+                    )}
                 </div>
 
                 {/* Animated glow */}
@@ -324,6 +373,7 @@ export default function QuotationPage() {
                     <div className="absolute bottom-[10%] left-[-5%] w-[35%] h-[35%] bg-[#0a8c35]/15 blur-[120px] rounded-full mix-blend-screen animate-pulse delay-5000" />
                 </div>
             </div>
+            )}
 
             {/* RIGHT SIDE: Cotizador Panel */}
             <div className="w-full lg:w-[480px] xl:w-[520px] h-full flex flex-col bg-[#102216]/95 backdrop-blur-xl lg:border-l border-white/5 relative z-20">
@@ -560,28 +610,101 @@ export default function QuotationPage() {
                     {/* Step 4: Pricing & Render Preview */}
                     {step === 'pricing' && pricing && (
                         <div className="space-y-6">
-                            {/* Render Preview Card */}
+                            {/* Visual proposal: several versions, pick one, expand it */}
                             <Card className="bg-white/5 backdrop-blur-xl border border-[#13ec5b]/30 shadow-[0_0_30px_rgba(19,236,91,0.1)] rounded-3xl overflow-hidden text-white">
                                 <CardContent className="p-0">
-                                    <div className="relative aspect-video bg-black/40 flex items-center justify-center overflow-hidden">
-                                        {renderImageUrl ? (
-                                            <img
-                                                src={renderImageUrl}
-                                                alt="Render Preview"
-                                                className="w-full h-full object-cover transition-transform hover:scale-105 duration-700"
-                                            />
+                                    {/* On large screens the chosen render fills the left side instead */}
+                                    <div className="relative aspect-video bg-black/40 flex items-center justify-center overflow-hidden lg:hidden">
+                                        {activeRender ? (
+                                            <button className="group block w-full h-full" onClick={() => setLightboxIndex(renders.indexOf(activeRender))}>
+                                                <img
+                                                    key={activeRender}
+                                                    src={activeRender}
+                                                    alt="Propuesta visual de tu proyecto"
+                                                    className="w-full h-full object-cover animate-fade-in transition-transform duration-700 group-hover:scale-105"
+                                                />
+                                                <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-semibold backdrop-blur-md">
+                                                    <Maximize2 className="w-3.5 h-3.5" /> Ampliar
+                                                </span>
+                                            </button>
                                         ) : generatingImage ? (
-                                            <div className="text-center p-8 bg-black/20 w-full h-full flex flex-col items-center justify-center">
-                                                <Loader2 className="w-12 h-12 mx-auto mb-6 animate-spin text-[#13ec5b]" />
-                                                <h3 className="font-bold text-xl animate-pulse text-white">Generando Visualización 3D...</h3>
-                                                <p className="text-[#13ec5b] mt-2">Diseñando tu {variables?.project_type} con IA</p>
+                                            <div className="text-center p-8">
+                                                <Loader2 className="w-10 h-10 mx-auto mb-4 animate-spin text-[#13ec5b]" />
+                                                <h3 className="font-bold text-lg animate-pulse">Generando tu propuesta visual…</h3>
+                                                <p className="text-[#13ec5b] text-sm mt-1">Diseñando tu {variables?.project_type} con IA</p>
                                             </div>
                                         ) : (
-                                            <div className="text-center p-6 text-slate-500">
-                                                <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                                <p>Imagen no disponible</p>
+                                            <div className="text-center p-6 text-slate-400">
+                                                <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                                                <p className="text-sm">Aún no hay imagen</p>
                                             </div>
                                         )}
+                                    </div>
+
+                                    <div className="p-5 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-bold flex items-center gap-2">
+                                                <ImageIcon className="w-4 h-4 text-[#13ec5b]" />
+                                                Propuesta visual
+                                            </p>
+                                            {renders.length > 0 && (
+                                                <span className="text-xs text-slate-400">
+                                                    {renders.length} {renders.length === 1 ? 'versión' : 'versiones'} · elige tu favorita
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {(renders.length > 0 || generatingImage) && (
+                                            <div className="grid grid-cols-4 gap-2">
+                                                {renders.map((url, i) => (
+                                                    <button
+                                                        key={url}
+                                                        onClick={() => setActiveRender(url)}
+                                                        aria-label={`Ver versión ${i + 1}`}
+                                                        className={`relative aspect-video rounded-lg overflow-hidden ring-2 transition-all ${url === activeRender ? 'ring-[#13ec5b] shadow-[0_0_12px_rgba(19,236,91,0.35)]' : 'ring-white/10 opacity-60 hover:opacity-100'}`}
+                                                    >
+                                                        <img src={url} alt="" className="w-full h-full object-cover" />
+                                                        <span className="absolute bottom-0.5 left-1 text-[10px] font-black drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">V{i + 1}</span>
+                                                    </button>
+                                                ))}
+                                                {generatingImage && (
+                                                    <div className="aspect-video rounded-lg border border-dashed border-[#13ec5b]/50 bg-[#13ec5b]/5 grid place-items-center">
+                                                        <Loader2 className="w-4 h-4 animate-spin text-[#13ec5b]" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {imageError && (
+                                            <p className="flex items-start gap-2 text-sm text-red-300">
+                                                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                                {imageError}
+                                            </p>
+                                        )}
+
+                                        <form
+                                            className="flex gap-2"
+                                            onSubmit={(e) => {
+                                                e.preventDefault()
+                                                if (projectId) generateRender(projectId, variantNote)
+                                            }}
+                                        >
+                                            <Input
+                                                value={variantNote}
+                                                onChange={(e) => setVariantNote(e.target.value)}
+                                                placeholder="¿Algún cambio? Ej: más madera, luz cálida…"
+                                                disabled={generatingImage}
+                                                className="h-11 rounded-xl bg-black/30 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-[#13ec5b] focus-visible:ring-offset-0"
+                                            />
+                                            <Button
+                                                type="submit"
+                                                disabled={generatingImage || !projectId}
+                                                className="h-11 flex-none rounded-xl bg-white/10 hover:bg-[#13ec5b] hover:text-[#102216] text-white font-semibold transition-colors"
+                                            >
+                                                {generatingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1.5" />}
+                                                {!generatingImage && (renders.length ? 'Otra versión' : 'Generar')}
+                                            </Button>
+                                        </form>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -660,11 +783,11 @@ export default function QuotationPage() {
                                 </p>
 
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                    <Button variant="outline" onClick={() => router.push('/')} className="h-12 px-8 rounded-xl bg-black/30 border-white/10 hover:bg-white/10 hover:text-white">
-                                        Volver al Inicio
+                                    <Button variant="outline" onClick={() => router.push('/dashboard')} className="h-12 px-8 rounded-xl bg-black/30 border-white/10 hover:bg-white/10 hover:text-white">
+                                        Mis proyectos
                                     </Button>
-                                    <Button onClick={() => router.push('/dashboard')} className="h-12 px-8 bg-[#13ec5b] hover:bg-[#13ec5b]/90 text-[#102216] font-bold rounded-xl shadow-[0_0_15px_rgba(19,236,91,0.3)]">
-                                        Ir al Panel de Control
+                                    <Button onClick={() => router.push(`/projects/${projectId}`)} className="h-12 px-8 bg-[#13ec5b] hover:bg-[#13ec5b]/90 text-[#102216] font-bold rounded-xl shadow-[0_0_15px_rgba(19,236,91,0.3)]">
+                                        Ver mi propuesta
                                     </Button>
                                 </div>
                             </CardContent>
@@ -673,6 +796,8 @@ export default function QuotationPage() {
                 </div>
                 </div>
             </div>
+
+            <Lightbox images={renders} index={lightboxIndex} onChange={setLightboxIndex} alt="Propuesta visual de tu proyecto" downloadable />
         </div>
     )
 }

@@ -1,32 +1,34 @@
 import { NextResponse } from 'next/server'
 
-import { createAdminClient } from '@/lib/supabase/server'
 import { aiImage } from '@/lib/ai/engine'
+import { projectAccess } from '@/lib/projects/access'
 
 export const maxDuration = 300
 
-// Robust UUID generator fallback
-function generateUUID() {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
-    }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
+// Every render is a paid AI call: clients get this many per project, staff are not limited
+const MAX_CLIENT_RENDERS = 12
 
 export async function POST(request: Request) {
     try {
         const body = await request.json()
         const { projectId, prompt, projectDetails, instructions } = body
-        // Use Admin Client to bypass RLS for storage upload
-        const supabase = await createAdminClient()
 
         console.log(`[GenerateImage] Starting for project: ${projectId}, `)
 
         if (!projectId) {
             return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
+        }
+
+        const access = await projectAccess(projectId)
+        if ('error' in access) return access.error
+        // Service client (bypasses RLS) for the storage upload and render rows
+        const supabase = access.admin
+
+        if (!access.staff) {
+            const { count } = await supabase.from('project_renders').select('id', { count: 'exact', head: true }).eq('project_id', projectId)
+            if ((count ?? 0) >= MAX_CLIENT_RENDERS) {
+                return NextResponse.json({ error: `Ya generaste ${MAX_CLIENT_RENDERS} versiones para este proyecto. Un asesor puede crear más por ti.` }, { status: 429 })
+            }
         }
 
         // Generate comprehensive prompt

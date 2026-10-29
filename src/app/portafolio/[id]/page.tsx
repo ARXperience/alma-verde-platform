@@ -2,9 +2,10 @@
 
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ArrowUpRight, ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, ZoomIn } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { Lightbox } from '@/components/ui/lightbox'
 
 interface PortfolioProject {
     id: string
@@ -78,22 +79,6 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ id: 
         ...(project.featured_image_url ? [project.featured_image_url] : []),
         ...(project.gallery_images || []).filter((img) => img !== project.featured_image_url)
     ] : []
-
-    // Lightbox keyboard navigation
-    useEffect(() => {
-        if (lightboxIndex === null) return
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setLightboxIndex(null)
-            if (e.key === 'ArrowRight') setLightboxIndex((i) => i === null ? i : (i + 1) % allImages.length)
-            if (e.key === 'ArrowLeft') setLightboxIndex((i) => i === null ? i : (i - 1 + allImages.length) % allImages.length)
-        }
-        document.body.style.overflow = 'hidden'
-        window.addEventListener('keydown', onKey)
-        return () => {
-            document.body.style.overflow = ''
-            window.removeEventListener('keydown', onKey)
-        }
-    }, [lightboxIndex, allImages.length])
 
     if (loading) {
         return (
@@ -355,57 +340,7 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ id: 
                 </div>
             </section>
 
-            {/* Lightbox */}
-            {lightboxIndex !== null && (
-                <div
-                    className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm md:p-16"
-                    onClick={() => setLightboxIndex(null)}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label={project.title}
-                >
-                    <button
-                        className="absolute right-6 top-6 grid h-12 w-12 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
-                        onClick={() => setLightboxIndex(null)}
-                        aria-label="Cerrar"
-                    >
-                        <X size={22} />
-                    </button>
-                    <img
-                        src={allImages[lightboxIndex]}
-                        alt={`${project.title}, imagen ${lightboxIndex + 1}`}
-                        className="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                    {allImages.length > 1 && (
-                        <>
-                            <span className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium tabular-nums text-white">
-                                {lightboxIndex + 1} / {allImages.length}
-                            </span>
-                            <button
-                                className="absolute left-4 grid h-12 w-12 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:left-8"
-                                aria-label="Imagen anterior"
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setLightboxIndex((lightboxIndex - 1 + allImages.length) % allImages.length)
-                                }}
-                            >
-                                <ChevronLeft size={22} />
-                            </button>
-                            <button
-                                className="absolute right-4 grid h-12 w-12 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:right-8"
-                                aria-label="Imagen siguiente"
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setLightboxIndex((lightboxIndex + 1) % allImages.length)
-                                }}
-                            >
-                                <ChevronRight size={22} />
-                            </button>
-                        </>
-                    )}
-                </div>
-            )}
+            <Lightbox images={allImages} index={lightboxIndex} onChange={setLightboxIndex} alt={project.title} />
 
             <Footer />
         </main>
