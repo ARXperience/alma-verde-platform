@@ -116,8 +116,8 @@ export default function NosotrosPage() {
                     <div className="relative mt-16 overflow-hidden rounded-[2rem] bg-[#dfe5df] sm:mt-24 lg:rounded-[3rem]">
                         <div className="relative aspect-[4/5] sm:aspect-[16/10] lg:aspect-[16/8.2]">
                             <Image
-                                src="/proyectos/nosotros-espacios.webp"
-                                alt="Terraza del restaurante Brangus Burger con barra y mobiliario en madera hechos por Alma Verde"
+                                src="/proyectos/multiplaza.webp"
+                                alt="Montaje de Alma Verde en el centro comercial Multiplaza con letras gigantes, mobiliario en madera y venado geométrico"
                                 fill
                                 sizes="(max-width: 1536px) 94vw, 1440px"
                                 className="object-cover object-center"

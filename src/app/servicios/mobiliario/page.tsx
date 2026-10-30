@@ -27,8 +27,8 @@ export default function MobiliarioPage() {
             galleryDescription="Un lenguaje de formas, materiales y proporciones que acompaña al producto sin competir con él."
             gallery={[
                 { image: '/service-furniture.webp', title: 'Sistemas de exhibición', label: 'Colección' },
-                { image: '/hero-slides/slide-2.webp', title: 'Experiencia comercial', label: 'Retail' },
-                { image: '/proyectos/mobiliario-a-medida.webp', title: 'Desarrollo a medida', label: 'Proceso' },
+                { image: '/proyectos/alma-sabores-placeres.webp', title: 'Experiencia comercial', label: 'Retail' },
+                { image: '/proyectos/tienda-robago.webp', title: 'Desarrollo a medida', label: 'Proceso' },
             ]}
             ctaTitle="Diseñemos la pieza que tu espacio necesita."
             ctaDescription="Comparte medidas, usos y referencias. Desarrollaremos una solución fabricable, funcional y coherente con tu marca."

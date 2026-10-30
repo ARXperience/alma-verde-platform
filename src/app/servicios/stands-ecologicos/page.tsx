@@ -27,7 +27,7 @@ export default function StandsEcologicosPage() {
             galleryDescription="Cada elemento tiene una función hoy y una posibilidad de uso mañana."
             gallery={[
                 { image: '/hero-slides/slide-1.webp', title: 'Arquitectura de marca', label: 'Presencia' },
-                { image: '/proyectos/stand-bta-capital.webp', title: 'Del modelo al espacio', label: 'Proceso' },
+                { image: '/proyectos/stand-videa.webp', title: 'Del modelo al espacio', label: 'Proceso' },
                 { image: '/hero-slides/slide-6.webp', title: 'Montaje preciso', label: 'Ejecución' },
             ]}
             ctaTitle="Tu próximo stand puede trabajar mejor para tu marca."

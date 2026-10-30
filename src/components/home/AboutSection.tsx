@@ -43,8 +43,8 @@ export function AboutSection() {
                 <div className="relative mt-14 overflow-hidden rounded-[1.75rem] bg-[#e8ece7] sm:mt-20 sm:rounded-[2.5rem] lg:mt-24">
                     <div className="relative aspect-[4/5] sm:aspect-[16/10] lg:aspect-[16/8.2]">
                         <Image
-                            src="/proyectos/sobre-alma-verde.webp"
-                            alt="Stand en madera de la marca Elemental, de Gina Murillo, diseñado y producido por Alma Verde para Feria Buró"
+                            src="/proyectos/tedx-unisabana.webp"
+                            alt="Auditorio de TEDx UniSabana con escenografía y elementos de exhibición diseñados por Alma Verde"
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1536px) 94vw, 1440px"
                             className="object-cover object-center"
