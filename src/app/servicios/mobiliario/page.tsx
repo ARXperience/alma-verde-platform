@@ -28,7 +28,7 @@ export default function MobiliarioPage() {
             gallery={[
                 { image: '/service-furniture.webp', title: 'Sistemas de exhibición', label: 'Colección' },
                 { image: '/hero-slides/slide-2.webp', title: 'Experiencia comercial', label: 'Retail' },
-                { image: '/about-alma-verde.webp', title: 'Desarrollo a medida', label: 'Proceso' },
+                { image: '/proyectos/mobiliario-a-medida.webp', title: 'Desarrollo a medida', label: 'Proceso' },
             ]}
             ctaTitle="Diseñemos la pieza que tu espacio necesita."
             ctaDescription="Comparte medidas, usos y referencias. Desarrollaremos una solución fabricable, funcional y coherente con tu marca."
