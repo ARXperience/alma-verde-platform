@@ -80,7 +80,7 @@ export default function ResetPasswordPage() {
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="flex justify-center mb-8">
-                    <Link href="/" className="text-foreground transition-opacity hover:opacity-80">
+                    <Link href="/" className="text-[#13ec5b] transition-opacity hover:opacity-80">
                         <Logo className="h-12 w-auto" />
                     </Link>
                 </div>
