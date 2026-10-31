@@ -49,6 +49,21 @@ const disciplines = [
     },
 ]
 
+const founders = [
+    {
+        name: 'Stephan López',
+        role: 'Fundador · Director creativo',
+        image: '/equipo/stephan-lopez.webp',
+        bio: 'Diseñador industrial. Define la dirección creativa de cada proyecto de Alma Verde: convierte la identidad de una marca en stands, mobiliario y espacios comerciales que se recorren y se recuerdan, cuidando que cada idea sea fabricable desde el primer boceto.',
+    },
+    {
+        name: 'Juliana Vargas',
+        role: 'Cofundadora · Directora de proyectos',
+        image: '/equipo/juliana-vargas.webp',
+        bio: 'Diseñadora industrial. Dirige los proyectos de principio a fin: materiales, presupuestos, tiempos, producción y montaje. Se asegura de que lo diseñado llegue al espacio tal como se pensó, con precisión técnica y sin sorpresas para el cliente.',
+    },
+]
+
 const studioImages = [
     {
         image: '/service-furniture.webp',
@@ -161,6 +176,43 @@ export default function NosotrosPage() {
                                 <span className="text-xs font-semibold tabular-nums text-[#5cff8d]">{discipline.number}</span>
                                 <h3 className="mt-16 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">{discipline.title}</h3>
                                 <p className="mt-4 text-sm leading-6 text-white/50 sm:text-base sm:leading-7">{discipline.description}</p>
+                            </article>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section id="equipo" className="scroll-mt-24 px-5 pt-24 sm:px-8 lg:px-12 lg:pt-36">
+                <div className="mx-auto max-w-[1440px]">
+                    <div className="mb-14 grid items-end gap-8 lg:mb-20 lg:grid-cols-12">
+                        <div className="lg:col-span-8">
+                            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-[#168340]">Quiénes somos</p>
+                            <h2 className="max-w-5xl text-balance text-[clamp(3rem,6vw,6.4rem)] font-semibold leading-[0.94] tracking-[-0.06em]">
+                                Dos diseñadores industriales detrás de cada espacio.
+                            </h2>
+                        </div>
+                        <p className="max-w-xl text-base leading-7 text-[#657067] sm:text-lg sm:leading-8 lg:col-span-4">
+                            Pensamos cada pieza desde cómo se usa, cómo se fabrica y cómo se monta. Por eso lo que diseñamos se puede construir.
+                        </p>
+                    </div>
+
+                    <div className="grid gap-14 lg:grid-cols-2 lg:gap-12">
+                        {founders.map((person) => (
+                            <article key={person.name} className="group grid gap-7 sm:grid-cols-[220px_1fr] sm:items-start xl:grid-cols-[260px_1fr]">
+                                <div className="relative aspect-[4/5] max-w-[360px] overflow-hidden rounded-[1.75rem] bg-[#dfe5df]">
+                                    <Image
+                                        src={person.image}
+                                        alt={`${person.name}, ${person.role.toLowerCase()} de Alma Verde`}
+                                        fill
+                                        sizes="(max-width: 640px) 360px, 260px"
+                                        className="object-cover object-top grayscale transition duration-700 group-hover:scale-[1.03] group-hover:grayscale-0"
+                                    />
+                                </div>
+                                <div className="border-t border-[#cbd4cc] pt-6">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#168340]">{person.role}</p>
+                                    <h3 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">{person.name}</h3>
+                                    <p className="mt-4 max-w-xl text-sm leading-6 text-[#657067] sm:text-base sm:leading-7">{person.bio}</p>
+                                </div>
                             </article>
                         ))}
                     </div>
