@@ -8,6 +8,7 @@ import {
     Package, Settings, ShoppingCart, Users, X, type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
+import { Logo } from '@/components/layout/Logo'
 import { supabase } from '@/lib/supabase/client'
 
 const STAFF_ROLES: Record<string, string> = {
@@ -100,14 +101,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="pointer-events-none absolute left-[-50%] top-0 h-[300px] w-[200%] rounded-full bg-[#13ec5b]/5 blur-[80px]" />
 
             <div className="relative flex items-center justify-between p-6">
-                <Link href="/admin" className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#13ec5b] to-[#0a8c35] shadow-lg shadow-[#13ec5b]/20">
-                        <span className="material-symbols-outlined font-black text-[#102216]">eco</span>
-                    </div>
-                    <div>
-                        <p className="text-xl font-bold tracking-tight text-white">Alma Verde</p>
-                        <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-[#13ec5b]">Panel de gestión</p>
-                    </div>
+                <Link href="/admin" className="text-white">
+                    <Logo className="h-10 w-auto" />
+                    <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-[#13ec5b]">Panel de gestión</p>
                 </Link>
                 <button className="rounded-lg p-2 hover:bg-white/10 md:hidden" onClick={() => setMenuOpen(false)} aria-label="Cerrar menú">
                     <X className="h-5 w-5" />
@@ -183,7 +179,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <button onClick={() => setMenuOpen(true)} className="rounded-lg p-2 hover:bg-white/10" aria-label="Abrir menú">
                         <Menu className="h-5 w-5" />
                     </button>
-                    <span className="font-bold">Alma Verde <span className="text-[#13ec5b]">Panel</span></span>
+                    <Logo className="h-8 w-auto" />
                     <span className="w-9" />
                 </header>
                 <main className="flex-1 overflow-auto bg-[#f6f8f6]">{children}</main>

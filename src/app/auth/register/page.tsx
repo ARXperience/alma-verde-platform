@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Logo } from '@/components/layout/Logo'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Sparkles, Mail, Lock, User, Phone, Building, AlertCircle, CheckCircle } from 'lucide-react'
+import { Mail, Lock, User, Phone, Building, AlertCircle, CheckCircle } from 'lucide-react'
 import type { UserRole } from '@/types/database'
 
 export default function RegisterPage() {
@@ -98,13 +99,8 @@ export default function RegisterPage() {
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="flex justify-center mb-8">
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <div className="w-12 h-12 rounded-lg gradient-primary flex items-center justify-center transform group-hover:scale-110 transition-transform">
-                            <Sparkles className="w-7 h-7 text-white" />
-                        </div>
-                        <span className="text-2xl font-display font-bold text-gradient">
-                            Alma Verde
-                        </span>
+                    <Link href="/" className="text-foreground transition-opacity hover:opacity-80">
+                        <Logo className="h-12 w-auto" />
                     </Link>
                 </div>
 

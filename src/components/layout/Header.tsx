@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useCart } from "@/contexts/CartContext"
 import { CartSheet } from "@/components/store/CartSheet"
+import { Logo } from "@/components/layout/Logo"
 
 const navigation = [
     { name: 'Proyectos', href: '/portafolio' },
@@ -24,12 +25,9 @@ export function Header() {
         <>
         <header className="sticky top-0 z-50 bg-[#f6f8f6]/80 dark:bg-[#102216]/80 backdrop-blur-md border-b border-slate-200/30 dark:border-slate-700/30 px-6 lg:px-20 py-4">
             <nav className="flex items-center justify-between" aria-label="Global">
-                <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#13ec5b] text-3xl">eco</span>
-                    <Link href="/" className="text-xl font-extrabold tracking-tight uppercase font-display">
-                        Alma Verde <span className="text-[#13ec5b]">Diseño</span>
-                    </Link>
-                </div>
+                <Link href="/" className="transition-opacity hover:opacity-80">
+                    <Logo className="h-10 w-auto md:h-12" />
+                </Link>
 
                 <div className="hidden md:flex items-center gap-10">
                     {navigation.map((item) => (
@@ -95,12 +93,7 @@ export function Header() {
                 mobileMenuOpen ? "translate-x-0" : "translate-x-full"
             )}>
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#13ec5b] text-3xl">eco</span>
-                        <span className="text-xl font-extrabold tracking-tight uppercase font-display">
-                            Alma Verde <span className="text-[#13ec5b]">Diseño</span>
-                        </span>
-                    </div>
+                    <Logo className="h-9 w-auto" />
                     <button onClick={() => setMobileMenuOpen(false)}>
                         <X className="h-6 w-6" />
                     </button>

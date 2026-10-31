@@ -3,13 +3,14 @@
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { Logo } from '@/components/layout/Logo'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Sparkles, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react'
+import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react'
 
 function LoginForm() {
     const router = useRouter()
@@ -112,13 +113,8 @@ export default function LoginPage() {
             <div className="w-full max-w-md relative z-10">
                 {/* Logo */}
                 <div className="flex justify-center mb-10">
-                    <Link href="/" className="flex flex-col items-center gap-4 group">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#13ec5b] to-[#0a8c35] flex items-center justify-center transform group-hover:scale-105 transition-all shadow-lg shadow-[#13ec5b]/30">
-                            <Sparkles className="w-8 h-8 text-[#102216]" />
-                        </div>
-                        <span className="text-3xl font-black text-white tracking-tight">
-                            Alma Verde
-                        </span>
+                    <Link href="/" className="text-white transition-opacity hover:opacity-80">
+                        <Logo className="h-14 w-auto" />
                     </Link>
                 </div>
 

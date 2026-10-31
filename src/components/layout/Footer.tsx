@@ -1,13 +1,13 @@
 import Link from "next/link"
+import { Logo } from "@/components/layout/Logo"
 
 export function Footer() {
     return (
         <footer className="bg-[#111813] text-white py-12 px-6 lg:px-20 border-t border-white/5">
             <div className="flex flex-col md:flex-row justify-between items-center gap-8 max-w-7xl mx-auto">
-                <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#13ec5b] text-3xl">eco</span>
-                    <h1 className="text-xl font-extrabold tracking-tight uppercase font-display">Alma Verde</h1>
-                </div>
+                <Link href="/" className="transition-opacity hover:opacity-80">
+                    <Logo className="h-11 w-auto" />
+                </Link>
                 <div className="flex gap-8 text-sm text-slate-400">
                     <Link className="hover:text-[#13ec5b] transition-colors" href="#">Política de Privacidad</Link>
                     <Link className="hover:text-[#13ec5b] transition-colors" href="#">Términos de Servicio</Link>

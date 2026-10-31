@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Logo } from '@/components/layout/Logo'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase/client'
@@ -103,11 +104,8 @@ export default function DashboardPage() {
 
             {/* Top bar */}
             <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-4 py-6 sm:px-6">
-                <Link href="/" className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-3xl text-[#13ec5b]">eco</span>
-                    <span className="text-lg font-extrabold uppercase tracking-tight">
-                        Alma Verde <span className="text-[#13ec5b]">Diseño</span>
-                    </span>
+                <Link href="/" className="transition-opacity hover:opacity-80">
+                    <Logo className="h-9 w-auto" />
                 </Link>
                 <Link
                     href="/cotizar"

@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Lightbox } from '@/components/ui/lightbox'
+import { Logo } from '@/components/layout/Logo'
 import { Sparkles, Send, Loader2, CheckCircle, AlertCircle, Mic, FileText, Image as ImageIcon, Maximize2, Wand2 } from 'lucide-react'
 import type { QuotationVariables, PricingBreakdown } from '@/types/quotation'
 import { briefExcerpt, projectName } from '@/lib/projects/display'
@@ -341,10 +342,7 @@ export default function QuotationPage() {
 
                 {/* Floating branding on top of video */}
                 <div className="relative z-20 text-center px-12">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-sm font-medium mb-6">
-                        <Sparkles className="w-4 h-4 text-[#13ec5b]" />
-                        <span className="text-white">Alma Verde Diseño</span>
-                    </div>
+                    <Logo className="mx-auto mb-8 h-12 w-auto text-white drop-shadow-lg" />
                     {generatingImage ? (
                         <>
                             <h2 className="text-4xl xl:text-5xl font-black tracking-tight mb-4 drop-shadow-lg">
